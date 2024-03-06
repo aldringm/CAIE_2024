@@ -1,5 +1,5 @@
-ID,Produtividade,Pilha,Tipo,Fila,Caminhoes,Lote,Prioridade,Relaxar
-BARNABE,100,0,3,2,2,0,1,n
-PONTO_3,2,0,3,2,2,0,1,n
-BRIT_PRIM,2350,1,1,3,2,54000,1,s
-BRIT_SECO,275,0,1,4,2,20000,2,n
+ID,Productivity,Pilha,Tipo,Fila,Caminhoes,Lote,Prioridade,Relaxar
+WASTEPILE1,100,0,3,2,2,0,1,n
+WASTEPILE2,2,0,3,2,2,0,1,n
+WETPLANT,2350,1,1,3,2,13000,1,s
+DRYPLANT,275,0,1,4,2,20000,2,n

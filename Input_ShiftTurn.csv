@@ -1,4 +1,4 @@
-ID,Equipamento,Inicio,Fim,Duracao
+ID,Equipamento,Start,End,Duracao
 1,Caminhões,1,1.5,15
 2,Escavadeiras,1,1.5,15
 3,Caminhões,7,7.5,15
