@@ -127,9 +127,9 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         aux1 = []
         aux2 = []
 
-        aux1 = max(df_LoadingMachine['Produtividade'].to_list()) * v_optimization_time
+        aux1 = max(df_LoadingMachine['Productivity'].to_list()) * v_optimization_time
         aux2 = max(df_LoadingMachine[
-                       'Produtividade'].to_list()) * 48  # AUXILIARY VARIABLE THAT STORES THE MAXIMUM AVAILABLE MASS IN THE REGIONS. 
+                       'Productivity'].to_list()) * 48  # AUXILIARY VARIABLE THAT STORES THE MAXIMUM AVAILABLE MASS IN THE REGIONS.
 
         s.clock = 0  # INITIALIZES THE SIMULATION CLOCK
 
@@ -137,7 +137,7 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         s.MaxRegionMass2 = aux2
         MaxMassPerRegion = aux2
 
-        s.inicia_descargas(df_Discharge)  # INITIALIZES THE DISCHARGE OBJECTS OF THE SIMULATION MODULE
+        s.InitializesDischarges(df_Discharge)  # INITIALIZES THE DISCHARGE OBJECTS OF THE SIMULATION MODULE
         s.df_MainBetTime_plant = df_MainBetTime_plant  # ASSIGN TO THE SIMULATION DATAFRAME WITH DATA OF THE TIME BETWEEN BREAKDOWNS OF THE PROCESSING PLANTS
         s.df_MainDurTime_plant = df_MainDurTime_plant  # ASSIGN TO THE SIMULATION DATAFRAME WITH DATA OF THE BREAKDOWN DURATION TIMES  OF THE PROCESSING PLANTS
         s.df_MainBetTime_truck = df_MainBetTime_truck  # ASSIGN TO THE SIMULATION DATAFRAME WITH DATA OF THE TIME BETWEEN BREAKDOWNS OF THE TRUCK FLEETS
@@ -149,28 +149,28 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         s.df_MovTime_loader = df_MovTime_loader  # ASSIGN TO THE SIMULATION DATAFRAME THE DATA OF MOVEMENT TIME OF THE LOADING MACHINES BETWEEN THE REGIONS
         s.df_RandDurTime = df_RandDurTime  # ASSIGN TO THE SIMULATION DATAFRAME WITH DATA OF THE BREAKDOWN DURATION TIMES  OF THE RANDOM EVENTS
         s.df_Random = df_Random  # ASSIGN TO THE SIMULATION DATAFRAME WITH DATA OF THE BETWEEN BREAKDOWN TIMES  OF THE RANDOM EVENTS
-        m_df_aux = s.df_Random[(s.df_Random['Equipamento'] == 'Caminhões')]
-        s.d_entre_eventos_aleatorios_cam = {}
+        m_df_aux = s.df_Random[(s.df_Random['Equipment'] == 'Trucks')]
+        s.d_BetweenRandomEvents_truck = {}
         for i in m_df_aux.index:
-            s.d_entre_eventos_aleatorios_cam[m_df_aux['Evento'].loc[i]] = m_df_aux.loc[i]
-        m_df_aux = s.df_RandDurTime[(s.df_RandDurTime['Equipamento'] == 'Caminhões')]
-        s.d_durac_eventos_aleatorios_cam = {}
+            s.d_BetweenRandomEvents_truck[m_df_aux['Event'].loc[i]] = m_df_aux.loc[i]
+        m_df_aux = s.df_RandDurTime[(s.df_RandDurTime['Equipment'] == 'Trucks')]
+        s.d_RandomEventDuration_truck = {}
         for i in m_df_aux.index:
-            s.d_durac_eventos_aleatorios_cam[m_df_aux['Evento'].loc[i]] = m_df_aux.loc[i]
-        m_df_aux = s.df_Random[(s.df_Random['Equipamento'] == 'Escavadeiras')]
-        s.d_entre_eventos_aleatorios_esc = {}
+            s.d_RandomEventDuration_truck[m_df_aux['Event'].loc[i]] = m_df_aux.loc[i]
+        m_df_aux = s.df_Random[(s.df_Random['Equipment'] == 'Loaders')]
+        s.d_BetweenRandomEvents_loader = {}
         for i in m_df_aux.index:
-            s.d_entre_eventos_aleatorios_esc[m_df_aux['Evento'].loc[i]] = m_df_aux.loc[i]
-        m_df_aux = s.df_RandDurTime[(s.df_RandDurTime['Equipamento'] == 'Escavadeiras')]
-        s.d_durac_eventos_aleatorios_esc = {}
+            s.d_BetweenRandomEvents_loader[m_df_aux['Event'].loc[i]] = m_df_aux.loc[i]
+        m_df_aux = s.df_RandDurTime[(s.df_RandDurTime['Equipment'] == 'Loaders')]
+        s.d_RandomEventDuration_loader = {}
         for i in m_df_aux.index:
-            s.d_durac_eventos_aleatorios_esc[m_df_aux['Evento'].loc[i]] = m_df_aux.loc[i]
+            s.d_RandomEventDuration_loader[m_df_aux['Event'].loc[i]] = m_df_aux.loc[i]
 
         # INITIALIZES THE OBJECTS THAT REPRESENTS THE MINE EQUIPMENT
-        s.inicia_escavadeiras(df_LoadingMachine)  # INITIALIZES THE LOADING MACHINES
-        s.entre_chegadas_caminhoes(df_Truck)  # INITIALIZES THE TRUCKS
-        s.inicia_usinas(m_df_usina)  # INITIALIZES THE PROCESSING PLANTS
-        s.inicia_check_retomada()  # INITIALIZE THE ROUTINE THAT CONTROLS THE TIME INTERVAL TO RECLAIM THE FORMED PILES IN THE ORE YARD.
+        s.InitializesLoaders(df_LoadingMachine)  # INITIALIZES THE LOADING MACHINES
+        s.TrucksArrivals(df_Truck)  # INITIALIZES THE TRUCKS
+        s.InitializesOrePlants(m_df_usina)  # INITIALIZES THE PROCESSING PLANTS
+        s.InitializesReclaimCheck()  # INITIALIZE THE ROUTINE THAT CONTROLS THE TIME INTERVAL TO RECLAIM THE FORMED PILES IN THE ORE YARD.
         s.d_Perfom_plant = d_Perfom_plant
         s.df_LoadTime_truck = df_LoadTime_truck  # ASSIGN TO THE SIMULATION DATAFRAME THE LOADING TIMES OF THE TRUCKS' CYCLES
         s.df_UnloaTime_truck = df_UnloaTime_truck  # ASSIGN TO THE SIMULATION DATAFRAME THE UNLOADING TIMES OF THE TRUCKS' CYCLES
@@ -181,29 +181,29 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         # RECORDED THE AVERAGE CYCLE TIME OF THE TRUCKS
         c_d_CycleTime = {}
         for i in range(len(df_EmpHaulage_truck)):
-            c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                           df_EmpHaulage_truck['Destino'].iloc[i])] = 0
+            c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                           df_EmpHaulage_truck['Destination'].iloc[i])] = 0
             for j in range(0, 10):
-                c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                               df_EmpHaulage_truck['Destino'].iloc[i])] += s.gera_tempo_viagem_vazio(
-                    df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                    df_EmpHaulage_truck['Destino'].iloc[i])
-                c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                               df_EmpHaulage_truck['Destino'].iloc[i])] += s.gera_tempo_viagem_cheio(
-                    df_LoadHaulage_truck['Frota'].iloc[i], df_LoadHaulage_truck['Origem'].iloc[i],
-                    df_LoadHaulage_truck['Destino'].iloc[i])
-            c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                           df_EmpHaulage_truck['Destino'].iloc[i])] = \
-                c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                               df_EmpHaulage_truck['Destino'].iloc[i])] / 10
-            c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                           df_EmpHaulage_truck['Destino'].iloc[i])] += s.gera_tempo_carga(
+                c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                               df_EmpHaulage_truck['Destination'].iloc[i])] += s.GeneratesEmptyHaulageTime(
+                    df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                    df_EmpHaulage_truck['Destination'].iloc[i])
+                c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                               df_EmpHaulage_truck['Destination'].iloc[i])] += s.GeneratesLoadedHaulageTime(
+                    df_LoadHaulage_truck['Fleet'].iloc[i], df_LoadHaulage_truck['Origin'].iloc[i],
+                    df_LoadHaulage_truck['Destination'].iloc[i])
+            c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                           df_EmpHaulage_truck['Destination'].iloc[i])] = \
+                c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                               df_EmpHaulage_truck['Destination'].iloc[i])] / 10
+            c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                           df_EmpHaulage_truck['Destination'].iloc[i])] += s.GeneratesLoadingTime(
                 df_LoadingMachine['ID'].iloc[0], df_Truck['ID'].iloc[0])
-            c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                           df_EmpHaulage_truck['Destino'].iloc[i])] += s.gera_tempo_basculo(df_Truck['ID'].iloc[0],
+            c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                           df_EmpHaulage_truck['Destination'].iloc[i])] += s.GeneratesUnloadingTime(df_Truck['ID'].iloc[0],
                                                                                             df_Discharge['ID'].iloc[0])
-            c_d_CycleTime[(df_EmpHaulage_truck['Frota'].iloc[i], df_EmpHaulage_truck['Origem'].iloc[i],
-                           df_EmpHaulage_truck['Destino'].iloc[i])] += 2
+            c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
+                           df_EmpHaulage_truck['Destination'].iloc[i])] += 2
 
         for i in range(len(df_Truck)):
             for j in l_Regions:
@@ -212,15 +212,15 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                         c_d_CycleTime[(df_Truck['ID'].iloc[i], j, df_Discharge['ID'].iloc[k])] = float(
                             df_Truck['Ciclo'].iloc[i])
                         df_EmpHaulage_truck = df_EmpHaulage_truck.append(
-                            {'ID': len(df_EmpHaulage_truck), 'Frota': df_Truck['ID'].iloc[i], \
-                             'Origem': j, 'Destino': df_Discharge['ID'].iloc[k],
-                             'Expressao': 'NORM',
+                            {'ID': len(df_EmpHaulage_truck), 'Fleet': df_Truck['ID'].iloc[i], \
+                             'Origin': j, 'Destination': df_Discharge['ID'].iloc[k],
+                             'Expression': 'NORM',
                              'Param_1': float(df_Truck['Ciclo'].iloc[i]) / 2, 'Param_2': 0.5,
                              'Param_3': 'nan'}, ignore_index=True)
                         df_LoadHaulage_truck = df_LoadHaulage_truck.append(
-                            {'ID': len(df_LoadHaulage_truck), 'Frota': df_Truck['ID'].iloc[i], \
-                             'Origem': j, 'Destino': df_Discharge['ID'].iloc[k],
-                             'Expressao': 'NORM',
+                            {'ID': len(df_LoadHaulage_truck), 'Fleet': df_Truck['ID'].iloc[i], \
+                             'Origin': j, 'Destination': df_Discharge['ID'].iloc[k],
+                             'Expression': 'NORM',
                              'Param_1': float(df_Truck['Ciclo'].iloc[i]) / 2, 'Param_2': 0.5,
                              'Param_3': 'nan'}, ignore_index=True)
         s.df_EmpHaulage_truck = df_EmpHaulage_truck
@@ -274,9 +274,7 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         v_OreMassAvail = 0
         c_d_prog_mes = {0: 0, 24: 0, 53: 0, 84: 0, 114: 0, 145: 0, 175: 0, 206: 0, 237: 0, 267: 0, 298: 0, 328: 0}
         c_l_files = ["\TruckEvents" + str(c_cont_repl) + ".txt", "\LoaderEvents" + str(c_cont_repl) + ".txt",
-                     "\Eventos_pilha" + str(c_cont_repl) + ".txt", \
-                     "\OrePiles" + str(c_cont_repl) + ".txt", "\Trips" + str(c_cont_repl) + ".txt",
-                     "\Prioridades" + str(c_cont_repl) + ".txt"]
+                     "\OrePiles" + str(c_cont_repl) + ".txt", "\Trips" + str(c_cont_repl) + ".txt"]
         for i in c_l_files:
             if os.path.exists(OutputPath + i):
                 os.remove(OutputPath + i)
@@ -360,8 +358,8 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                 cont = 0
 
                 c_l_ind_regioes = tuple(s.ExtracMassRegion.keys())
-                c_l_massa_ext_regiao = []
-                c_l_massa_ext_regiao = list(s.ExtracMassRegion.values())
+                c_l_ExtracMassRegion = []
+                c_l_ExtracMassRegion = list(s.ExtracMassRegion.values())
                 c_l_meses = tuple(s.s_md_prod_mensal.index)
                 if animation:
                     c_l_meses_values_ore = s.s_md_prod_mensal['Ore'].tolist()
@@ -377,9 +375,9 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                     ax00.bar(x_indexes + width, c_l_meses_values_waste, color="orange", width=width, label="waste")
                     ax11.set_xlim(right=130000)
                     ax01.set_xlim(right=6000000)
-                    if len(c_l_massa_ext_regiao) > 0:
+                    if len(c_l_ExtracMassRegion) > 0:
                         ax01.barh(c_l_ind_regioes, c_d_ScheduledMassPerRegion, color="orange")
-                        ax01.barh(c_l_ind_regioes, c_l_massa_ext_regiao)
+                        ax01.barh(c_l_ind_regioes, c_l_ExtracMassRegion)
 
                     if s.d_Plants[s.d_DiscResource['WETPLANT'].Plant].status == 0:
                         if s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming'] > 0:
@@ -454,17 +452,13 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                     c_v_RequiredOre = 0
                     for i in df_Discharge.index:
                         s.d_DiscResource[i].status = 1
-                        if df_Discharge['Tipo'].loc[i] == 1:
+                        if df_Discharge['Type'].loc[i] == 1:
                             df_Discharge["Productivity"].loc[i] = c_d_DischargeProductivity[i]
                             if ((s.d_DiscResource[i].d_PileStatus["Reclaiming"] != 0 and len(
                                     s.d_DiscResource[i].WaitingPiles) >= 1) or
                                     len(s.d_DiscResource[i].WaitingPiles) >= 2):
                                 df_Discharge["Productivity"].loc[i] = 0
                             c_v_RequiredOre += df_Discharge["Productivity"].loc[i] * v_optimization_time
-
-                    # GERA PRIORIZA  O DAS FUN  ES OBJETIVOS:
-                    o_l_PrioritizationOrder = []
-                    o_l_weight = []
 
                     s.ThereIsWaste = True
                     # DEFINE THE PRIORITIZATION ORDER OF THE FUNCTIONS ACCORDING TO THE CHOOSEN
@@ -475,11 +469,11 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                     elif v_OreMassAvail > 0 and v_WasteMassAvail == 0:
                         aux = 0
                         for i in df_Discharge.index:
-                            if df_Discharge["Tipo"].loc[i] == 1:
+                            if df_Discharge["Type"].loc[i] == 1:
                                 aux += int(df_Discharge["Productivity"].loc[i])
                         if aux < 100:
                             for i in df_Discharge.index:
-                                if df_Discharge["Tipo"].loc[i] == 1 and df_Discharge['Relaxar'].loc[i] == "s":
+                                if df_Discharge["Type"].loc[i] == 1 and df_Discharge['Relaxar'].loc[i] == "s":
                                     df_Discharge["Productivity"].loc[i] = c_d_DischargeProductivity[i]
                                     aux += df_Discharge["Productivity"].loc[i]
                         s.ThereIsWaste = False
@@ -553,7 +547,7 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                     s.v_TotalScheduledTrips += s.d_trips[i]  # UPDATES THE TOTAL SCHEDULE TRIPS VARIABLE
                 if s.v_TotalScheduledTrips == 0 and s.clock == 0:
                     s.clock = 1
-            s.avanca_relogio()
+            s.AdvancesClock()
         print("TOTAL RECLAIMED MASS = ", round(s.FeedMass, 0), "TONNES")
 
         s.s_md_times.to_csv("Resumo_eventos" + str(c_cont_repl) + ".csv")

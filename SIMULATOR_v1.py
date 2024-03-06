@@ -36,7 +36,7 @@ class SIMULATION:
         # Files paths directories
         self.TripsFile = open(self.OutputPath + "\Trips"+ str(self.RepNumber) + ".txt", 'w') # Stores the details of truck's trips
         self.TrucksEventFile = open(self.OutputPath + "\TruckEvents"+ str(self.RepNumber) + ".txt", 'w') #Stores the details of truck's events
-        self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'w') #Sores the details fo excavator's events
+        self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'w') #Sores the details fo excavator's events
         self.PileFile = open(self.OutputPath + "\OrePiles"+ str(self.RepNumber) + ".txt", 'w') # Stores the mass and other parameters from the piles
         self.PileFile.close()
 
@@ -78,8 +78,6 @@ class SIMULATION:
                                                    (213, 244, 0, 0), (244, 274, 0, 0), \
                                                    (274, 305, 0, 0), (305, 335, 0, 0), (335, 365, 0, 0)])
         self.TripsperLoader = {}
-        #self.d_entre_eventos_aleatorios_cam = {}
-        #self.d_durac_eventos_aleatorios_cam = {}
         self.s_md_times = pd.DataFrame(columns=['Fleet','Day',1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,12],
                                     index=[], \
                                     data=[])
@@ -106,7 +104,7 @@ class SIMULATION:
             self.Loader = 0 # #Index of an assigned excavator
             self.Discharge = 0 # Index of an assigened discharge
             self.Region = 0
-            self.Type = "Caminhão" #Type of equipment
+            self.Type = "Truck" #Type of equipment
             # Dic of main events
             self.Events = {1: "EmptyHaulage", 2: "ManueverLoader", 3: "LoaderQueue", 4: "Loading", \
                             5: "LoadedHaulage", 6: "DischargeQueue", 7: "Unloading", 8: "TruckMaintenance",
@@ -165,8 +163,8 @@ class SIMULATION:
             self.queue = []
             self.Unloading = 0
             self.MainFinalEvent = 10000000
-            self.d_PileStatus = {"Reclaiming": 0, "Stacking": 0, "Aguardando": 0}
-            self.Events = {1:"Operando",2:"Processando",3:"Manutenção"}
+            self.d_PileStatus = {"Reclaiming": 0, "Stacking": 0, "Waiting": 0}
+            #self.Events = {1:"Operando",2:"Processando",3:"Manutenção"}
             self.UnloadingTime = 0
             self.DischargeMass = 0
             self.WaitingPiles = []
@@ -239,71 +237,65 @@ class SIMULATION:
         s_num = Param_2[Interval - 1] + (Param_2[Interval] - Param_2[Interval - 1]) * s_num
         return (s_num)
 
-    def gera_num_aleatorio(self, Dist, Param_1, Param_2, Param_3):
+    def GeneratesRandomNumbers(self, Dist, Param_1, Param_2, Param_3):
         return eval(self.d_Distributions[Dist])
 
-    def gera_tempo_carga(self, Loader, Fleet):
-        Expression = self.df_LoadTime_truck['Expressao'][
-            (self.df_LoadTime_truck['Carga'] == Loader) & (self.df_LoadTime_truck['Frota'] == Fleet)].iloc[0]
+    def GeneratesLoadingTime(self, Loader, Fleet):
+        Expression = self.df_LoadTime_truck['Expression'][
+            (self.df_LoadTime_truck['Loader'] == Loader) & (self.df_LoadTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_1 = self.df_LoadTime_truck['Param_1'][
-            (self.df_LoadTime_truck['Carga'] == Loader) & (self.df_LoadTime_truck['Frota'] == Fleet)].iloc[0]
+            (self.df_LoadTime_truck['Loader'] == Loader) & (self.df_LoadTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_2 = self.df_LoadTime_truck['Param_2'][
-            (self.df_LoadTime_truck['Carga'] == Loader) & (self.df_LoadTime_truck['Frota'] == Fleet)].iloc[0]
+            (self.df_LoadTime_truck['Loader'] == Loader) & (self.df_LoadTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_3 = self.df_LoadTime_truck['Param_3'][
-            (self.df_LoadTime_truck['Carga'] == Loader) & (self.df_LoadTime_truck['Frota'] == Fleet)].iloc[0]
+            (self.df_LoadTime_truck['Loader'] == Loader) & (self.df_LoadTime_truck['Fleet'] == Fleet)].iloc[0]
         valor = eval(self.d_Distributions[Expression])
         return valor
 
-    def gera_tempo_basculo(self, Fleet, Discharge):
-        Expression = self.df_UnloaTime_truck['Expressao'][
-            (self.df_UnloaTime_truck['Descarga'] == Discharge) & (self.df_UnloaTime_truck['Frota'] == Fleet)].iloc[0]
+    def GeneratesUnloadingTime(self, Fleet, Discharge):
+        Expression = self.df_UnloaTime_truck['Expression'][
+            (self.df_UnloaTime_truck['Discharge'] == Discharge) & (self.df_UnloaTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_1 = self.df_UnloaTime_truck['Param_1'][
-            (self.df_UnloaTime_truck['Descarga'] == Discharge) & (self.df_UnloaTime_truck['Frota'] == Fleet)].iloc[0]
+            (self.df_UnloaTime_truck['Discharge'] == Discharge) & (self.df_UnloaTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_2 = self.df_UnloaTime_truck['Param_2'][
-            (self.df_UnloaTime_truck['Descarga'] == Discharge) & (self.df_UnloaTime_truck['Frota'] == Fleet)].iloc[0]
+            (self.df_UnloaTime_truck['Discharge'] == Discharge) & (self.df_UnloaTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_3 = self.df_UnloaTime_truck['Param_3'][
-            (self.df_UnloaTime_truck['Descarga'] == Discharge) & (self.df_UnloaTime_truck['Frota'] == Fleet)].iloc[0]
+            (self.df_UnloaTime_truck['Discharge'] == Discharge) & (self.df_UnloaTime_truck['Fleet'] == Fleet)].iloc[0]
         valor = eval(self.d_Distributions[Expression])
         return valor
 
-    def gera_tempo_viagem_vazio(self, Fleet, origem, Discharge):
+    def GeneratesEmptyHaulageTime(self, Fleet, Origin, Discharge):
         self.df_EmpHaulage_truck.to_csv(self.Path + "/teste.csv", index=False, header=True)
-        Expression = self.df_EmpHaulage_truck['Expressao'][
-            (self.df_EmpHaulage_truck['Destino'] == Discharge) & (self.df_EmpHaulage_truck['Frota'] == Fleet) & (
-                   self.df_EmpHaulage_truck['Origem'] == origem)].iloc[0]
+        Expression = self.df_EmpHaulage_truck['Expression'][
+            (self.df_EmpHaulage_truck['Destination'] == Discharge) & (self.df_EmpHaulage_truck['Fleet'] == Fleet) & (
+                   self.df_EmpHaulage_truck['Origin'] == Origin)].iloc[0]
         Param_1 = self.df_EmpHaulage_truck['Param_1'][
-            (self.df_EmpHaulage_truck['Destino'] == Discharge) & (self.df_EmpHaulage_truck['Frota'] == Fleet) & (
-                    self.df_EmpHaulage_truck['Origem'] == origem)].iloc[0]
+            (self.df_EmpHaulage_truck['Destination'] == Discharge) & (self.df_EmpHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_EmpHaulage_truck['Origin'] == Origin)].iloc[0]
         Param_2 = self.df_EmpHaulage_truck['Param_2'][
-            (self.df_EmpHaulage_truck['Destino'] == Discharge) & (self.df_EmpHaulage_truck['Frota'] == Fleet) & (
-                    self.df_EmpHaulage_truck['Origem'] == origem)].iloc[0]
+            (self.df_EmpHaulage_truck['Destination'] == Discharge) & (self.df_EmpHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_EmpHaulage_truck['Origin'] == Origin)].iloc[0]
         Param_3 = self.df_EmpHaulage_truck['Param_3'][
-            (self.df_EmpHaulage_truck['Destino'] == Discharge) & (self.df_EmpHaulage_truck['Frota'] == Fleet) & (
-                    self.df_EmpHaulage_truck['Origem'] == origem)].iloc[0]
+            (self.df_EmpHaulage_truck['Destination'] == Discharge) & (self.df_EmpHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_EmpHaulage_truck['Origin'] == Origin)].iloc[0]
         valor = eval(self.d_Distributions[Expression])
         return valor
 
-    def gera_tempo_viagem_cheio(self, Fleet, origem, Discharge):
-        Expression = self.df_LoadHaulage_truck['Expressao'][
-            (self.df_LoadHaulage_truck['Destino'] == Discharge) & (self.df_LoadHaulage_truck['Frota'] == Fleet) & (
-                    self.df_LoadHaulage_truck['Origem'] == origem)].iloc[0]
+    def GeneratesLoadedHaulageTime(self, Fleet, Origin, Discharge):
+        Expression = self.df_LoadHaulage_truck['Expression'][
+            (self.df_LoadHaulage_truck['Destination'] == Discharge) & (self.df_LoadHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_LoadHaulage_truck['Origin'] == Origin)].iloc[0]
         Param_1 = self.df_LoadHaulage_truck['Param_1'][
-            (self.df_LoadHaulage_truck['Destino'] == Discharge) & (self.df_LoadHaulage_truck['Frota'] == Fleet) & (
-                    self.df_LoadHaulage_truck['Origem'] == origem)].iloc[0]
+            (self.df_LoadHaulage_truck['Destination'] == Discharge) & (self.df_LoadHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_LoadHaulage_truck['Origin'] == Origin)].iloc[0]
         Param_2 = self.df_LoadHaulage_truck['Param_2'][
-            (self.df_LoadHaulage_truck['Destino'] == Discharge) & (self.df_LoadHaulage_truck['Frota'] == Fleet) & (
-                    self.df_LoadHaulage_truck['Origem'] == origem)].iloc[0]
+            (self.df_LoadHaulage_truck['Destination'] == Discharge) & (self.df_LoadHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_LoadHaulage_truck['Origin'] == Origin)].iloc[0]
         Param_3 = self.df_LoadHaulage_truck['Param_3'][
-            (self.df_LoadHaulage_truck['Destino'] == Discharge) & (self.df_LoadHaulage_truck['Frota'] == Fleet) & (
-                    self.df_LoadHaulage_truck['Origem'] == origem)].iloc[0]
+            (self.df_LoadHaulage_truck['Destination'] == Discharge) & (self.df_LoadHaulage_truck['Fleet'] == Fleet) & (
+                    self.df_LoadHaulage_truck['Origin'] == Origin)].iloc[0]
         valor = eval(self.d_Distributions[Expression])
         return valor
-
-    def gera_tempo_disponivel_descarga(self):
-        return np.random.normal(50, 10)
-
-    def gera_tempo_parada_Discharge(self):
-        return np.random.normal(20, 2)
 
     #Write files:
     def write_file(self, arquivo, Fleet, index, Event, Loader, duration):
@@ -316,13 +308,13 @@ class SIMULATION:
 
     #Start resources
 
-    def inicia_check_retomada(self):
+    def InitializesReclaimCheck(self):
         check_retomada = self.Check_retomada()
         check_retomada.NextEvent = 101
         check_retomada.EventEnd = self.clock + 10
         self.EquipmentList.append(check_retomada)
 
-    def inicia_escavadeiras(self, m_df_escavadeira):
+    def InitializesLoaders(self, m_df_escavadeira):
 
         for i in list(m_df_escavadeira.index):
             aux_list = []
@@ -337,8 +329,8 @@ class SIMULATION:
             escavadeira.EventEnd = np.random.normal(1, 0.5)
             if not self.df_MainBetTime_loader.empty:
                 escavadeira.MainFinalEvent_Loader = self.clock + \
-                                                   self.gera_num_aleatorio(
-                                                       self.df_MainBetTime_loader.loc[i]["Expressao"],
+                                                   self.GeneratesRandomNumbers(
+                                                       self.df_MainBetTime_loader.loc[i]["Expression"],
                                                        self.df_MainBetTime_loader.loc[i]["Param_1"], \
                                                        self.df_MainBetTime_loader.loc[i]["Param_2"],
                                                        self.df_MainBetTime_loader.loc[i]["Param_3"])
@@ -346,15 +338,15 @@ class SIMULATION:
                 escavadeira.MainFinalEvent_Loader = float('inf')
             self.EquipmentList.append(escavadeira)
 
-            for k in self.d_entre_eventos_aleatorios_esc.keys():
+            for k in self.d_BetweenRandomEvents_loader.keys():
                 escavadeira.d_EventEnd_alea_esc[k] = self.clock + \
-                                                 self.gera_num_aleatorio(
-                                                     self.d_entre_eventos_aleatorios_esc[k]["Expressao"],
-                                                     self.d_entre_eventos_aleatorios_esc[k]["Param_1"], \
-                                                     self.d_entre_eventos_aleatorios_esc[k]["Param_2"],
-                                                     self.d_entre_eventos_aleatorios_esc[k]["Param_3"])
+                                                 self.GeneratesRandomNumbers(
+                                                     self.d_BetweenRandomEvents_loader[k]["Expression"],
+                                                     self.d_BetweenRandomEvents_loader[k]["Param_1"], \
+                                                     self.d_BetweenRandomEvents_loader[k]["Param_2"],
+                                                     self.d_BetweenRandomEvents_loader[k]["Param_3"])
 
-    def inicia_descargas(self, m_df_Discharge):
+    def InitializesDischarges(self, m_df_Discharge):
         for i in list(m_df_Discharge.index):
             aux_list = []
             aux_list = list(m_df_Discharge.loc[i])
@@ -372,7 +364,7 @@ class SIMULATION:
             self.d_deposito[i].quality['Global'] = 100
 
     #Trucks functions
-    def entre_chegadas_caminhoes(self, m_df_caminhao):
+    def TrucksArrivals(self, m_df_caminhao):
         tempo = 0
         for i in range(len(m_df_caminhao)):
             for j in range(int(m_df_caminhao['Quant.'].iloc[i])):
@@ -391,8 +383,8 @@ class SIMULATION:
                 Truck.EventEnd = self.clock + tempo
                 if not self.df_MainBetTime_truck.empty:
                     Truck.MainFinalEvent_Truck = self.clock + \
-                                               self.gera_num_aleatorio(
-                                                   self.df_MainBetTime_truck.loc[Truck.Fleet]["Expressao"],
+                                               self.GeneratesRandomNumbers(
+                                                   self.df_MainBetTime_truck.loc[Truck.Fleet]["Expression"],
                                                    self.df_MainBetTime_truck.loc[Truck.Fleet]["Param_1"], \
                                                    self.df_MainBetTime_truck.loc[Truck.Fleet]["Param_2"],
                                                    self.df_MainBetTime_truck.loc[Truck.Fleet]["Param_3"])
@@ -402,17 +394,17 @@ class SIMULATION:
                 self.d_TruckResource[self.NumberTrucks].index = len(self.d_TruckResource)
                 self.EquipmentList.append(self.d_TruckResource[self.NumberTrucks])
                 if not self.df_Refueling.empty:
-                    Truck.autonomy = self.gera_num_aleatorio("NORM", self.df_Refueling['Autonomy'][
+                    Truck.autonomy = self.GeneratesRandomNumbers("NORM", self.df_Refueling['Autonomy'][
                         (self.df_Refueling['ID'] == Truck.Fleet)], 5, 0)
                 else:
                     Truck.autonomy = float('inf')
-                for k in self.d_entre_eventos_aleatorios_cam.keys():
+                for k in self.d_BetweenRandomEvents_truck.keys():
                     Truck.d_RandomFinalEvent_Truck[k] = self.clock + \
-                                           self.gera_num_aleatorio(
-                                               self.d_entre_eventos_aleatorios_cam[k]["Expressao"],
-                                               self.d_entre_eventos_aleatorios_cam[k]["Param_1"], \
-                                               self.d_entre_eventos_aleatorios_cam[k]["Param_2"],
-                                               self.d_entre_eventos_aleatorios_cam[k]["Param_3"])
+                                           self.GeneratesRandomNumbers(
+                                               self.d_BetweenRandomEvents_truck[k]["Expression"],
+                                               self.d_BetweenRandomEvents_truck[k]["Param_1"], \
+                                               self.d_BetweenRandomEvents_truck[k]["Param_2"],
+                                               self.d_BetweenRandomEvents_truck[k]["Param_3"])
 
     def EmptyHaulage(self, Truck):
         # Define qual puml ser  lavrada:
@@ -422,8 +414,6 @@ class SIMULATION:
             self.l_index_Times.append([Truck.Fleet,int(self.clock//1440)])
             self.s_md_times = self.s_md_times.append(pd.Series(data= {'Fleet':Truck.Fleet,'Day':int(self.clock//1440),\
             1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0}, name=len(self.l_index_Times)), ignore_index= False)
-            #print(self.s_md_times)
-            #print(self.clock)
         if len(self.d_trips) == 0:
             Truck.Event = 10
             Truck.duration = self.NextOptimization - self.clock
@@ -433,7 +423,7 @@ class SIMULATION:
 
             self.TrucksEventFile.write(
                 Truck.Fleet + ',Truck_'+str(Truck.index) + "," + str(Truck.Event) + "," + "{:.1f}".format(
-                    self.clock) + "," + "Sem Material" + "," + str("{:.2f}".format(Truck.duration)) +'\n')
+                    self.clock) + "," + "No material" + "," + str("{:.2f}".format(Truck.duration)) +'\n')
             self.TrucksEventFile.close()
         else:
             DispatchWeights = [100, 10, 100, 1000, 1000, 1000]
@@ -462,9 +452,9 @@ class SIMULATION:
                 Truck.Front = lista[1]
                 Truck.Discharge = str(lista[0])
                 Truck.Material = str(lista[2])
-                Truck.origem = Truck.Front.split("#")
-                Truck.origem = Truck.origem[0] + "#" + Truck.origem[1]
-                Truck.duration = self.gera_tempo_viagem_vazio(Truck.Fleet, Truck.origem, Truck.Discharge)
+                Truck.Origin = Truck.Front.split("#")
+                Truck.Origin = Truck.Origin[0] + "#" + Truck.Origin[1]
+                Truck.duration = self.GeneratesEmptyHaulageTime(Truck.Fleet, Truck.Origin, Truck.Discharge)
                 Truck.Event = 1
                 Truck.EventEnd = self.clock + Truck.duration
                 Truck.NextEvent = Truck.Event + 1
@@ -512,7 +502,7 @@ class SIMULATION:
                 Truck.autonomy = Truck.autonomy - Truck.duration / 60
                 self.TrucksEventFile = open(self.OutputPath + "\TruckEvents"+ str(self.RepNumber) + ".txt", 'a')
                 self.TrucksEventFile.write(
-                    Truck.Fleet + ',Truck_'+ str(Truck.index) + "," + str(Truck.Event) + "," + "{:.1f}".format(self.clock) + "," + Truck.origem + "," + str("{:.2f}".format(Truck.duration)) +'\n')
+                    Truck.Fleet + ',Truck_'+ str(Truck.index) + "," + str(Truck.Event) + "," + "{:.1f}".format(self.clock) + "," + Truck.Origin + "," + str("{:.2f}".format(Truck.duration)) +'\n')
                 self.TrucksEventFile.close()
             self.s_md_times[Truck.Event].loc[(self.s_md_times['Fleet'] == Truck.Fleet) & (self.s_md_times['Day'] == int(self.clock//1440))]+= Truck.duration
 
@@ -538,7 +528,7 @@ class SIMULATION:
     def Loading(self, Truck):
         Truck.Event = 4
         # Truck.duration = 5
-        Truck.duration = self.gera_tempo_carga(Truck.Loader, Truck.Fleet)
+        Truck.duration = self.GeneratesLoadingTime(Truck.Loader, Truck.Fleet)
         Truck.EventEnd = self.clock + Truck.duration
         Truck.NextEvent = Truck.Event + 1
         Truck.autonomy = Truck.autonomy - Truck.duration / 60
@@ -562,7 +552,7 @@ class SIMULATION:
             self.d_LoadResource[Truck.Loader].loading = 0
         self.d_LoadResource[Truck.Loader].InRoute -= 1
         Truck.Event = 5
-        Truck.duration = self.gera_tempo_viagem_cheio(Truck.Fleet, Truck.origem, Truck.Discharge)
+        Truck.duration = self.GeneratesLoadedHaulageTime(Truck.Fleet, Truck.Origin, Truck.Discharge)
         Truck.EventEnd = self.clock + Truck.duration
         Truck.NextEvent = 6
         Truck.autonomy = Truck.autonomy - Truck.duration / 60
@@ -581,7 +571,7 @@ class SIMULATION:
 
     def Unloading(self, Truck):
         Truck.Event = 7
-        duration = self.gera_tempo_basculo(Truck.Fleet, Truck.Discharge)
+        duration = self.GeneratesUnloadingTime(Truck.Fleet, Truck.Discharge)
         Discharge = self.d_DiscResource[Truck.Discharge]
         Discharge.Unloading = 1
         Truck.duration = max(0,duration)
@@ -598,7 +588,6 @@ class SIMULATION:
         # SE FOR A PRIMEIRA PILHA
         Discharge.UnloadingTime = self.clock
         Discharge.DischargeMass = Truck.Capacity
-        #aux = self.d_DiscResource[Truck.Discharge].DischargeMass / (self.clock - self.d_DiscResource[Truck.Discharge].UnloadingTime)
         if Discharge.Type == 1:
             Pile = self.d_Piles[Discharge.Pile]
             self.OreMass += Truck.Capacity
@@ -627,7 +616,7 @@ class SIMULATION:
                     Truck.Discharge) + "," + str(Truck.Capacity) + '\n')
             self.TripsFile.close()
 
-        # ATUALIZA DESCARGA
+        # UPDATES THE ORE PILES
         if Discharge.Type == 1:
             for i in self.d_WeightGrades.keys():
                 if Pile.massa == 0:
@@ -667,7 +656,8 @@ class SIMULATION:
                             else:
                                 aux = self.d_LowerBoundSize[i]/Pile.quality[i[1]]
                         Pile.Rate = Plant.Rate*aux
-                # ENCERRAR Pile ATUAL
+
+                # IT FINISHES THE ORE PILE FORMATION
                 Discharge.d_PileStatus["Stacking"] = 0
                 if Discharge.d_PileStatus["Reclaiming"] == 0:
                     if len(Discharge.WaitingPiles) > 0:
@@ -759,13 +749,13 @@ class SIMULATION:
                 self.d_DiscResource[Truck.Discharge].Unloading = 0
         if self.clock > Truck.MainFinalEvent_Truck:
             Truck.Event = 8
-            Truck.duration = self.gera_num_aleatorio(self.df_MainDurTime_truck.loc[Truck.Fleet]['Expressao'], \
+            Truck.duration = self.GeneratesRandomNumbers(self.df_MainDurTime_truck.loc[Truck.Fleet]['Expression'], \
                                                   self.df_MainDurTime_truck.loc[Truck.Fleet]['Param_1'],
                                                   self.df_MainDurTime_truck.loc[Truck.Fleet]['Param_2'], \
                                                   self.df_MainDurTime_truck.loc[Truck.Fleet]['Param_3'])
 
-            Truck.MainFinalEvent_Truck = self.clock + self.gera_num_aleatorio(
-                self.df_MainBetTime_truck.loc[Truck.Fleet]['Expressao'], \
+            Truck.MainFinalEvent_Truck = self.clock + self.GeneratesRandomNumbers(
+                self.df_MainBetTime_truck.loc[Truck.Fleet]['Expression'], \
                 self.df_MainBetTime_truck.loc[Truck.Fleet]['Param_1'],
                 self.df_MainBetTime_truck.loc[Truck.Fleet]['Param_2'], \
                 self.df_MainBetTime_truck.loc[Truck.Fleet]['Param_3'])
@@ -781,14 +771,14 @@ class SIMULATION:
         if not self.df_ShiftTurn.empty:
             tempo_horas = (self.clock % 1440) / 60
             existe = []
-            if equipamento.Type == "Caminhão":
+            if equipamento.Type == "Truck":
                 existe = self.df_ShiftTurn[
                     (tempo_horas >= self.df_ShiftTurn['Start']) & (tempo_horas < self.df_ShiftTurn['End']) & (
-                                self.df_ShiftTurn["Equipamento"] == "Caminhões")]
+                                self.df_ShiftTurn["Equipment"] == "Trucks")]
                 if len(existe) > 0:
                     equipamento.Event = 9
                     equipamento.duration = float(
-                        self.df_ShiftTurn['Duracao'][(self.df_ShiftTurn['Equipamento'] == "Caminhões")].iloc[0])
+                        self.df_ShiftTurn['Duracao'][(self.df_ShiftTurn['Equipment'] == "Trucks")].iloc[0])
                     equipamento.EventEnd = self.clock + equipamento.duration
                     equipamento.NextEvent = 10
                     self.TrucksEventFile = open(self.OutputPath + "\TruckEvents"+ str(self.RepNumber) + ".txt", 'a')
@@ -830,14 +820,14 @@ class SIMULATION:
                     if Truck.d_RandomFinalEvent_Truck[i] == aux:
                         aux = i
 
-                Truck.duration = self.gera_num_aleatorio(self.d_durac_eventos_aleatorios_cam[aux]['Expressao'], \
-                                                      self.d_durac_eventos_aleatorios_cam[aux]['Param_1'],
-                                                      self.d_durac_eventos_aleatorios_cam[aux]['Param_2'], \
-                                                      self.d_durac_eventos_aleatorios_cam[aux]['Param_3'])
-                Truck.d_RandomFinalEvent_Truck[aux] = self.clock + self.gera_num_aleatorio(self.d_entre_eventos_aleatorios_cam[aux]['Expressao'], \
-                                                      self.d_entre_eventos_aleatorios_cam[aux]['Param_1'],
-                                                      self.d_entre_eventos_aleatorios_cam[aux]['Param_2'], \
-                                                      self.d_entre_eventos_aleatorios_cam[aux]['Param_3'])
+                Truck.duration = self.GeneratesRandomNumbers(self.d_RandomEventDuration_truck[aux]['Expression'], \
+                                                      self.d_RandomEventDuration_truck[aux]['Param_1'],
+                                                      self.d_RandomEventDuration_truck[aux]['Param_2'], \
+                                                      self.d_RandomEventDuration_truck[aux]['Param_3'])
+                Truck.d_RandomFinalEvent_Truck[aux] = self.clock + self.GeneratesRandomNumbers(self.d_BetweenRandomEvents_truck[aux]['Expression'], \
+                                                      self.d_BetweenRandomEvents_truck[aux]['Param_1'],
+                                                      self.d_BetweenRandomEvents_truck[aux]['Param_2'], \
+                                                      self.d_BetweenRandomEvents_truck[aux]['Param_3'])
                 aux2 = Truck.d_RandomFinalEvent_Truck[aux]
                 Truck.Event = 11
                 Truck.NextEvent = 1
@@ -861,18 +851,18 @@ class SIMULATION:
                     if esc.d_EventEnd_alea_esc[i] == aux:
                         aux = i
                 esc.disp = 0
-                esc.duration = self.gera_num_aleatorio(self.d_durac_eventos_aleatorios_esc[aux]['Expressao'], \
-                                                      self.d_durac_eventos_aleatorios_esc[aux]['Param_1'],
-                                                      self.d_durac_eventos_aleatorios_esc[aux]['Param_2'], \
-                                                      self.d_durac_eventos_aleatorios_esc[aux]['Param_3'])
-                esc.d_EventEnd_alea_esc[aux] = self.clock + self.gera_num_aleatorio(self.d_entre_eventos_aleatorios_esc[aux]['Expressao'], \
-                                                      self.d_entre_eventos_aleatorios_esc[aux]['Param_1'],
-                                                      self.d_entre_eventos_aleatorios_esc[aux]['Param_2'], \
-                                                      self.d_entre_eventos_aleatorios_esc[aux]['Param_3'])
+                esc.duration = self.GeneratesRandomNumbers(self.d_RandomEventDuration_loader[aux]['Expression'], \
+                                                      self.d_RandomEventDuration_loader[aux]['Param_1'],
+                                                      self.d_RandomEventDuration_loader[aux]['Param_2'], \
+                                                      self.d_RandomEventDuration_loader[aux]['Param_3'])
+                esc.d_EventEnd_alea_esc[aux] = self.clock + self.GeneratesRandomNumbers(self.d_BetweenRandomEvents_loader[aux]['Expression'], \
+                                                      self.d_BetweenRandomEvents_loader[aux]['Param_1'],
+                                                      self.d_BetweenRandomEvents_loader[aux]['Param_2'], \
+                                                      self.d_BetweenRandomEvents_loader[aux]['Param_3'])
                 aux2 = esc.d_EventEnd_alea_esc[aux]
                 esc.NextEvent = 1
                 esc.EventEnd = self.clock + esc.duration
-                self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'a')
+                self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'a')
                 self.LoaderEventFile.write(
                     str(esc.a_id) + "," + aux + "," + "{:.2f}".format(self.clock) + "," + str(esc.duration) + '\n')
                 self.LoaderEventFile.close()
@@ -881,132 +871,122 @@ class SIMULATION:
         else:
             self.LoaderMaintenance(esc)
 
-    def LoaderWorking(self, obj_escavadeira):
-        obj_escavadeira.disp = 1
-        if obj_escavadeira.MainFinalEvent_Loader >= self.clock and obj_escavadeira.autonomy > 0.5 and obj_escavadeira.t_movement== 0:
-            obj_escavadeira.duration = 10
-            obj_escavadeira.NextEvent = 7
-            obj_escavadeira.EventEnd = self.clock + obj_escavadeira.duration
-            self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'a')
+    def LoaderWorking(self, LoaderObject):
+        LoaderObject.disp = 1
+        if LoaderObject.MainFinalEvent_Loader >= self.clock and LoaderObject.autonomy > 0.5 and LoaderObject.t_movement== 0:
+            LoaderObject.duration = 10
+            LoaderObject.NextEvent = 7
+            LoaderObject.EventEnd = self.clock + LoaderObject.duration
+            self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'a')
             self.LoaderEventFile.write(
-                str(obj_escavadeira.a_id) + "," + "Working" + "," + "{:.2f}".format(self.clock) + "," + str(
-                    obj_escavadeira.EventDuration) + '\n')
+                str(LoaderObject.a_id) + "," + "Working" + "," + "{:.2f}".format(self.clock) + "," + str(
+                    LoaderObject.EventDuration) + '\n')
             self.LoaderEventFile.close()
         else:
-            self.LoaderOtherEvents(obj_escavadeira)
+            self.LoaderOtherEvents(LoaderObject)
 
-    def LoaderMovement(self,obj_escavadeira):
-        if obj_escavadeira.t_movement >0:
-            obj_escavadeira.disp = 0
-            obj_escavadeira.duration = obj_escavadeira.t_movement
-            self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'a')
+    def LoaderMovement(self,LoaderObject):
+        if LoaderObject.t_movement >0:
+            LoaderObject.disp = 0
+            LoaderObject.duration = LoaderObject.t_movement
+            self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'a')
             self.LoaderEventFile.write(
-                str(obj_escavadeira.a_id) + "," + "Deslocando" + "," + "{:.2f}".format(self.clock) + "," + str(
-                    obj_escavadeira.EventDuration) + '\n')
+                str(LoaderObject.a_id) + "," + "On the move" + "," + "{:.2f}".format(self.clock) + "," + str(
+                    LoaderObject.EventDuration) + '\n')
             self.LoaderEventFile.close()
-            obj_escavadeira.NextEvent = 4
-            obj_escavadeira.EventEnd = self.clock + obj_escavadeira.duration
-            obj_escavadeira.t_movement = 0
+            LoaderObject.NextEvent = 4
+            LoaderObject.EventEnd = self.clock + LoaderObject.duration
+            LoaderObject.t_movement = 0
         else:
-            self.LoaderShiftTurn(obj_escavadeira)
+            self.LoaderShiftTurn(LoaderObject)
 
-    def LoaderShiftTurn(self, obj_escavadeira):
+    def LoaderShiftTurn(self, LoaderObject):
         if not self.df_ShiftTurn.empty:
             tempo_horas = (self.clock % 1440) / 60
             existe = []
             existe = self.df_ShiftTurn[
                 (tempo_horas >= self.df_ShiftTurn['Start']) & (tempo_horas < self.df_ShiftTurn['End']) & (
-                            self.df_ShiftTurn['Equipamento'] == "Escavadeiras")]
+                            self.df_ShiftTurn['Equipment'] == "Loaders")]
             if len(existe) > 0:
-                obj_escavadeira.Event = 4
-                obj_escavadeira.duration = float(
-                    self.df_ShiftTurn['Duracao'][(self.df_ShiftTurn['Equipamento'] == "Escavadeiras")].iloc[0])
-                obj_escavadeira.EventEnd = self.clock + obj_escavadeira.duration
-                obj_escavadeira.NextEvent = 5
-                self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'a')
+                LoaderObject.Event = 4
+                LoaderObject.duration = float(
+                    self.df_ShiftTurn['Duracao'][(self.df_ShiftTurn['Equipment'] == "Loaders")].iloc[0])
+                LoaderObject.EventEnd = self.clock + LoaderObject.duration
+                LoaderObject.NextEvent = 5
+                self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'a')
                 self.LoaderEventFile.write(
-                    str(obj_escavadeira.a_id) + "," + "Shift turn" + "," + "{:.2f}".format(self.clock) + "," + str(
-                        obj_escavadeira.duration) + '\n')
+                    str(LoaderObject.a_id) + "," + "Shift turn" + "," + "{:.2f}".format(self.clock) + "," + str(
+                        LoaderObject.duration) + '\n')
                 self.LoaderEventFile.close()
-                obj_escavadeira.disp = 0
+                LoaderObject.disp = 0
             else:
-                self.NoAllocation(obj_escavadeira)
+                self.NoAllocation(LoaderObject)
         else:
-            self.NoAllocation(obj_escavadeira)
+            self.NoAllocation(LoaderObject)
 
-    def NoAllocation(self, obj_escavadeira):
-        if self.TripsperLoader[obj_escavadeira.a_id] <1:
-            obj_escavadeira.Event = 5
-            obj_escavadeira.duration = self.OptimizationTime*60
-            obj_escavadeira.EventEnd = self.clock + obj_escavadeira.duration
-            obj_escavadeira.NextEvent = 6
-            self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'a')
+    def NoAllocation(self, LoaderObject):
+        if self.TripsperLoader[LoaderObject.a_id] <1:
+            LoaderObject.Event = 5
+            LoaderObject.duration = self.OptimizationTime*60
+            LoaderObject.EventEnd = self.clock + LoaderObject.duration
+            LoaderObject.NextEvent = 6
+            self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'a')
             self.LoaderEventFile.write(
-                str(obj_escavadeira.a_id) + "," + "No allocated" + "," + "{:.2f}".format(self.clock) + "," + str(
-                    obj_escavadeira.duration) + '\n')
+                str(LoaderObject.a_id) + "," + "No allocated" + "," + "{:.2f}".format(self.clock) + "," + str(
+                    LoaderObject.duration) + '\n')
             self.LoaderEventFile.close()
         else:
-            self.LoaderWorking(obj_escavadeira)
+            self.LoaderWorking(LoaderObject)
 
-    def LoaderFuelSupply(self, obj_escavadeira):
-        # obj_escavadeira = self.d_LoadResource[ind_escavadeira]
-        obj_escavadeira.disp = 1
-        if obj_escavadeira.autonomy <= 0.5:
-            obj_escavadeira.Event = 10
-
-            '''
-            obj_escavadeira.autonomy = self.df_Refueling['Autonomy'][(self.df_Refueling['ID'] == obj_escavadeira.Fleet)].iloc[0]
-            obj_escavadeira.duration = self.df_Refueling['Tempo'][(self.df_Refueling['ID'] == obj_escavadeira.Fleet)].iloc[0]
-            obj_escavadeira.duration = obj_escavadeira.duration*60
-            self.TrucksEventFile = open("Eventos_obj_escavadeira.txt", 'a')
-            self.arq_Events_obj_escavadeira.write(str(obj_escavadeira.index) + "," + "Abastecimento" + "," + "{:.2f}".format(self.clock) + "," + str(obj_escavadeira.duration) + '\n')
-            obj_escavadeira.EventEnd = self.clock + obj_escavadeira.duration
-            obj_escavadeira.NextEvent = 1
-            '''
+    def LoaderFuelSupply(self, LoaderObject):
+        # LoaderObject = self.d_LoadResource[ind_escavadeira]
+        LoaderObject.disp = 1
+        if LoaderObject.autonomy <= 0.5:
+            LoaderObject.Event = 10
         else:
-            self.LoaderMovement(obj_escavadeira)
+            self.LoaderMovement(LoaderObject)
 
-    def LoaderMaintenance(self, obj_escavadeira):
-            if self.clock < obj_escavadeira.MainFinalEvent_Loader and self.clock + 10 > obj_escavadeira.MainFinalEvent_Loader :
-                obj_escavadeira.HasStop = 1
-                self.LoaderFuelSupply(obj_escavadeira)
-            elif self.clock > obj_escavadeira.MainFinalEvent_Loader:
-                #if len(obj_escavadeira.queue) > 0 or obj_escavadeira.loading == 1 :
-                if obj_escavadeira.InRoute > 0:
-                    obj_escavadeira.MainFinalEvent_Loader += 10
-                    self.LoaderFuelSupply(obj_escavadeira)
+    def LoaderMaintenance(self, LoaderObject):
+            if self.clock < LoaderObject.MainFinalEvent_Loader and self.clock + 10 > LoaderObject.MainFinalEvent_Loader :
+                LoaderObject.HasStop = 1
+                self.LoaderFuelSupply(LoaderObject)
+            elif self.clock > LoaderObject.MainFinalEvent_Loader:
+                #if len(LoaderObject.queue) > 0 or LoaderObject.loading == 1 :
+                if LoaderObject.InRoute > 0:
+                    LoaderObject.MainFinalEvent_Loader += 10
+                    self.LoaderFuelSupply(LoaderObject)
                 else:
-                    obj_escavadeira.disp = 0
-                    obj_escavadeira.HasStop = 0
-                    obj_escavadeira.MainEventDuration_Loader = self.gera_num_aleatorio(
-                        self.df_MainDurTime_loader.loc[obj_escavadeira.a_id]['Expressao'], \
-                        self.df_MainDurTime_loader.loc[obj_escavadeira.a_id]['Param_1'],
-                        self.df_MainDurTime_loader.loc[obj_escavadeira.a_id]['Param_2'], \
-                        self.df_MainDurTime_loader.loc[obj_escavadeira.a_id]['Param_3'])
-                    obj_escavadeira.MainFinalEvent_Loader = 0
-                    while obj_escavadeira.MainFinalEvent_Loader < (obj_escavadeira.MainEventDuration_Loader + self.clock):
-                        obj_escavadeira.MainFinalEvent_Loader = self.clock + self.gera_num_aleatorio(
-                            self.df_MainBetTime_loader.loc[obj_escavadeira.a_id]['Expressao'], \
-                            self.df_MainBetTime_loader.loc[obj_escavadeira.a_id]['Param_1'],
-                            self.df_MainBetTime_loader.loc[obj_escavadeira.a_id]['Param_2'], \
-                            self.df_MainBetTime_loader.loc[obj_escavadeira.a_id]['Param_3'])
+                    LoaderObject.disp = 0
+                    LoaderObject.HasStop = 0
+                    LoaderObject.MainEventDuration_Loader = self.GeneratesRandomNumbers(
+                        self.df_MainDurTime_loader.loc[LoaderObject.a_id]['Expression'], \
+                        self.df_MainDurTime_loader.loc[LoaderObject.a_id]['Param_1'],
+                        self.df_MainDurTime_loader.loc[LoaderObject.a_id]['Param_2'], \
+                        self.df_MainDurTime_loader.loc[LoaderObject.a_id]['Param_3'])
+                    LoaderObject.MainFinalEvent_Loader = 0
+                    while LoaderObject.MainFinalEvent_Loader < (LoaderObject.MainEventDuration_Loader + self.clock):
+                        LoaderObject.MainFinalEvent_Loader = self.clock + self.GeneratesRandomNumbers(
+                            self.df_MainBetTime_loader.loc[LoaderObject.a_id]['Expression'], \
+                            self.df_MainBetTime_loader.loc[LoaderObject.a_id]['Param_1'],
+                            self.df_MainBetTime_loader.loc[LoaderObject.a_id]['Param_2'], \
+                            self.df_MainBetTime_loader.loc[LoaderObject.a_id]['Param_3'])
 
-                    self.LoaderEventFile = open(self.OutputPath + "\Eventos_esc"+ str(self.RepNumber) + ".txt", 'a')
+                    self.LoaderEventFile = open(self.OutputPath + "\LoaderEvents"+ str(self.RepNumber) + ".txt", 'a')
                     self.LoaderEventFile.write(
-                        str(obj_escavadeira.a_id) + "," + "Maintenance" + "," + "{:.2f}".format(self.clock) + "," + str(
-                            obj_escavadeira.EventDuration) + '\n')
+                        str(LoaderObject.a_id) + "," + "Maintenance" + "," + "{:.2f}".format(self.clock) + "," + str(
+                            LoaderObject.EventDuration) + '\n')
                     self.LoaderEventFile.close()
-                    obj_escavadeira.NextMainEvent_Loader = 1
-                    obj_escavadeira.NextEvent = 2
-                    obj_escavadeira.EventEnd = self.clock + obj_escavadeira.MainEventDuration_Loader
-                    if obj_escavadeira.MainEventDuration_Loader >= self.OptimizationTime * 60:
-                        print(" Call the MILP solve due the loading machine long breakdown ", obj_escavadeira.a_id)
+                    LoaderObject.NextMainEvent_Loader = 1
+                    LoaderObject.NextEvent = 2
+                    LoaderObject.EventEnd = self.clock + LoaderObject.MainEventDuration_Loader
+                    if LoaderObject.MainEventDuration_Loader >= self.OptimizationTime * 60:
+                        print(" Call the MILP solve due the loading machine long breakdown ", LoaderObject.a_id)
                         self.optimize = 1
             else:
-                self.LoaderFuelSupply(obj_escavadeira)
+                self.LoaderFuelSupply(LoaderObject)
 
     #Plant's functions
-    def inicia_usinas(self, m_df_Plant):
+    def InitializesOrePlants(self, m_df_Plant):
         for i in list(m_df_Plant.index):
             aux_list = []
             aux_list = list(m_df_Plant.loc[i])
@@ -1052,7 +1032,7 @@ class SIMULATION:
                         print("Discharge = ", self.d_DiscResource[Discharge].index)
                         del self.d_DiscResource[Discharge].WaitingPiles[0]
                         self.d_DiscResource[Discharge].d_PileStatus["Reclaiming"] = i
-                        self.d_DiscResource[Discharge].d_PileStatus["Aguardando"] = 0
+                        self.d_DiscResource[Discharge].d_PileStatus["Waiting"] = 0
                         self.d_Piles[i].Reclaiming = 1
                         self.d_Piles[i].Waiting = 0
                         if self.d_DiscResource[Discharge].Pile == 1:
@@ -1077,7 +1057,7 @@ class SIMULATION:
     def PlantMaintenance(self, Plant):
         if not self.df_MainDurTime_plant.empty:
                 if Plant.status == 1:
-                    Plant.duration_man = self.gera_num_aleatorio(self.df_MainDurTime_plant.loc[Plant.index]["Expressao"], \
+                    Plant.duration_man = self.GeneratesRandomNumbers(self.df_MainDurTime_plant.loc[Plant.index]["Expression"], \
                                                                 self.df_MainDurTime_plant.loc[Plant.index]["Param_1"],
                                                                 self.df_MainDurTime_plant.loc[Plant.index]["Param_2"], \
                                                                 self.df_MainDurTime_plant.loc[Plant.index]["Param_3"])
@@ -1092,7 +1072,7 @@ class SIMULATION:
                     self.TrucksEventFile.close()
                 else:
                     Plant.status = 1
-                    Plant.duration_man = self.gera_num_aleatorio(self.df_MainBetTime_plant.loc[Plant.index]["Expressao"], \
+                    Plant.duration_man = self.GeneratesRandomNumbers(self.df_MainBetTime_plant.loc[Plant.index]["Expression"], \
                                                                 self.df_MainBetTime_plant.loc[Plant.index]["Param_1"],
                                                                 self.df_MainBetTime_plant.loc[Plant.index]["Param_2"], \
                                                                 self.df_MainBetTime_plant.loc[Plant.index]["Param_3"])
@@ -1111,7 +1091,7 @@ class SIMULATION:
             Plant.NextEvent = 102
 
     #Advance simulation clock
-    def avanca_relogio(self):
+    def AdvancesClock(self):
         Times = [i.EventEnd for i in self.EquipmentList]
         t_Event = 0
         t_Event = min(Times)

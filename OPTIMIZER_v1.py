@@ -14,6 +14,7 @@ def solve(M, df_Truck, df_LoadingMachine, \
     if len(l_aux) > 0:
         for i in l_aux:
             del(o_d_RegionsRatio[i])
+
     GDW_n = {}
     GDW_p = {}
     SDW_n = {}
@@ -40,9 +41,7 @@ def solve(M, df_Truck, df_LoadingMachine, \
     d_LastAlocation2 = {}
     for i in d_LastAlocation.keys():
         d_LastAlocation2[i]  = d_LastAlocation[i]
-    #to = 0
-    dic_pesos = {}
-    dic_pesos = d_WeightGrades
+    dic_Weights = d_WeightGrades
     m_d_LoadingMachine = {}
     aux = []
     aux = list(df_LoadingMachine.columns)
@@ -65,12 +64,12 @@ def solve(M, df_Truck, df_LoadingMachine, \
         TDE[aux] = int(df_MovTime_loader['Tempo'].loc[i])
 
 
-    m_d_descarga = {}
+    m_d_Discharge = {}
     aux = []
     aux = list(df_Discharge.columns)
     for i in range(len(df_Discharge)):
-        m_d_descarga[df_Discharge['ID'].iloc[i]] = list(df_Discharge[aux[1:]].iloc[i])
-    D, DR, d_cava, DT, d_max_fila, d_simul, d_tamanho, d_prior, DS,d_mlc = eval('multidict(m_d_descarga)')
+        m_d_Discharge[df_Discharge['ID'].iloc[i]] = list(df_Discharge[aux[1:]].iloc[i])
+    D, DR, d_cava, DT, d_max_fila, d_simul, d_tamanho, d_prior, DS,d_mlc = eval('multidict(m_d_Discharge)')
     cont = 0
 
     G = []
@@ -103,14 +102,14 @@ def solve(M, df_Truck, df_LoadingMachine, \
         for k in G:
             lista = []
             lista.append(o_d_regions[i][k])
-            lista.append(o_d_regions[i][dic_pesos[k]])
+            lista.append(o_d_regions[i][dic_Weights[k]])
             dic_elements.update({(i[0], i[1], k): lista})
 
     teores, GM, SP = eval('multidict(dic_elements)')
     cont = 0
 
 
-    # PILHAS
+    # ORE PILES
 
     pilha, MP = multidict(o_d_PileMasses)
 
@@ -121,11 +120,11 @@ def solve(M, df_Truck, df_LoadingMachine, \
             if k == i[1]:
                 lista = []
                 lista.append(o_d_PileQualities[i])
-                if dic_pesos[i[1]] == 'Global':
+                if dic_Weights[i[1]] == 'Global':
                     cont +=1
                     lista.append(100)
                 else:
-                    lista.append(o_d_PileQualities[(i[0],dic_pesos[i[1]])])
+                    lista.append(o_d_PileQualities[(i[0],dic_Weights[i[1]])])
                     cont +=1
                 dic_PilesElements.update({i: lista})
 
@@ -159,26 +158,26 @@ def solve(M, df_Truck, df_LoadingMachine, \
 
     # ---------------------------------------------------------
     cont = 0
-    dic_meta_teor = {}
+    dic_GradeTargets = {}
     i = list(d_LowerBoundGrade.keys())
     j = list(d_UpperBoundGrade.keys())
     for cont in range(len(i)):
-        dic_meta_teor.update(
+        dic_GradeTargets.update(
             {i[cont]: [float(d_LowerBoundGrade[i[cont]]), float(d_UpperBoundGrade[i[cont]])]})
 
-    teor, GT_n, GT_p = eval('multidict(dic_meta_teor)')
+    teor, GT_n, GT_p = eval('multidict(dic_GradeTargets)')
 
 
     cont = 0
-    dic_meta_granulometria = {}
+    dic_ParticleSizeTargets = {}
     i = list(d_LowerBoundSize.keys())
     j = list(d_UpperBoundSize.keys())
     for cont in range(len(i)):
-        dic_meta_granulometria.update(
+        dic_ParticleSizeTargets.update(
             {i[cont]: [float(d_LowerBoundSize[i[cont]]), float(d_UpperBoundSize[i[cont]])]})
 
-    granul, ST_n, ST_p = eval('multidict(dic_meta_granulometria)')
-    #print(dic_meta_granulometria)
+    granul, ST_n, ST_p = eval('multidict(dic_ParticleSizeTargets)')
+    #print(dic_ParticleSizeTargets)
 
 
     R, RFM,RMP,RMA = multidict(o_d_RegionsRatio)
