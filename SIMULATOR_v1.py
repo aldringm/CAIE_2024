@@ -43,12 +43,12 @@ class SIMULATION:
         self.OreMass = 0 # Count the ore mass performed
         self.WasteMass = 0 # Count the waste mass performed
         self.l_MonOreMass = [] # List of amount of monthly ore mass
-        self.l_MonWasteMass = [] # List of amount of monthly waste massa
+        self.l_MonWasteMass = [] # List of amount of monthly waste mass
         self.optimize = 0 # Binary variable, assumes value 1 if its necessary call the solver, and 0 otherwise
         self.d_Plants = {} # Dictionary of the plant's objects
 
 
-        #Pandas Dataframes of event's times
+        #Pandas Dataframes of events' times
         self.df_LoadTime_truck = 0
         self.df_UnloaTime_truck = 0
         self.df_EmpHaulage_truck = 0
@@ -81,7 +81,7 @@ class SIMULATION:
         self.s_md_times = pd.DataFrame(columns=['Fleet','Day',1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,12],
                                     index=[], \
                                     data=[])
-        self.s_d_massas = {}
+        self.s_d_masses = {}
         self.l_index_Times = []
         self.d_LowerBoundSize = 0
         self.ThereIsWaste = True
@@ -144,15 +144,13 @@ class SIMULATION:
             self.InRoute = 0
 
     class Discharge(Equipment):
-        def __init__(self, a_id, produt, HasPile, Type, max_queue, max_basculo, BatchMass, prioridade, massa):
+        def __init__(self, a_id, produt, HasPile, Type, max_queue, max_basculo, BatchMass, prioridade, mass):
             self.id = a_id
             self.produt = produt
             self.HasPile = HasPile
             self.Pile = 0
             self.Type = Type
-            #self.max_queue = max_queue
-            #self.max_basculo = max_basculo
-            self.massa = massa
+            self.mass = mass
             self.BatchMass = BatchMass
             self.num = 0
             self.status = 1
@@ -164,18 +162,17 @@ class SIMULATION:
             self.Unloading = 0
             self.MainFinalEvent = 10000000
             self.d_PileStatus = {"Reclaiming": 0, "Stacking": 0, "Waiting": 0}
-            #self.Events = {1:"Operando",2:"Processando",3:"Manutenção"}
             self.UnloadingTime = 0
             self.DischargeMass = 0
             self.WaitingPiles = []
 
     class Piles:
-        def __init__(self, index, Discharge, Capacity, massa, Reclaiming, Stacking):
+        def __init__(self, index, Discharge, Capacity, mass, Reclaiming, Stacking):
             self.index = index
             self.Rate = 0
             self.Quantity = 0
             self.Capacity = Capacity
-            self.massa = massa
+            self.mass = mass
             self.Reclaiming = Reclaiming
             self.Stacking = Stacking
             self.Waiting = 0
@@ -189,7 +186,7 @@ class SIMULATION:
             self.index = index
             self.Rate = Rate
             self.Discharge = Discharge
-            self.status = 0  # 0 = em manuten  o, 1 = operando
+            self.status = 0  # 0 = In maintenance , 1 = working
             self.Event = 1
             self.EventDuration = 0
             self.NextEvent = 1
@@ -210,9 +207,9 @@ class SIMULATION:
             self.Capacity = ""
             self.quality = {}
             self.Types = []
-            self.massa = 0
+            self.mass = 0
 
-    class Check_retomada:
+    class Check_OreReclaiming:
         def __init__(self):
             self.duration = 0
             self.Event = 101
@@ -221,8 +218,7 @@ class SIMULATION:
             self.EventEnd = 0
             self.Events = {101: "Reclaim_Pile"}
 
-    #TIME GENERATION
-
+    #TIM
     def func_CONT(self, Param_1, Param_2):
         Param_1 = [float(i) for i in Param_1 if i != Param_1[0]]
         Param_2 = [float(i) for i in Param_2 if i != Param_2[0]]
@@ -249,8 +245,8 @@ class SIMULATION:
             (self.df_LoadTime_truck['Loader'] == Loader) & (self.df_LoadTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_3 = self.df_LoadTime_truck['Param_3'][
             (self.df_LoadTime_truck['Loader'] == Loader) & (self.df_LoadTime_truck['Fleet'] == Fleet)].iloc[0]
-        valor = eval(self.d_Distributions[Expression])
-        return valor
+        value = eval(self.d_Distributions[Expression])
+        return value
 
     def GeneratesUnloadingTime(self, Fleet, Discharge):
         Expression = self.df_UnloaTime_truck['Expression'][
@@ -261,8 +257,8 @@ class SIMULATION:
             (self.df_UnloaTime_truck['Discharge'] == Discharge) & (self.df_UnloaTime_truck['Fleet'] == Fleet)].iloc[0]
         Param_3 = self.df_UnloaTime_truck['Param_3'][
             (self.df_UnloaTime_truck['Discharge'] == Discharge) & (self.df_UnloaTime_truck['Fleet'] == Fleet)].iloc[0]
-        valor = eval(self.d_Distributions[Expression])
-        return valor
+        value = eval(self.d_Distributions[Expression])
+        return value
 
     def GeneratesEmptyHaulageTime(self, Fleet, Origin, Discharge):
         self.df_EmpHaulage_truck.to_csv(self.Path + "/teste.csv", index=False, header=True)
@@ -278,8 +274,8 @@ class SIMULATION:
         Param_3 = self.df_EmpHaulage_truck['Param_3'][
             (self.df_EmpHaulage_truck['Destination'] == Discharge) & (self.df_EmpHaulage_truck['Fleet'] == Fleet) & (
                     self.df_EmpHaulage_truck['Origin'] == Origin)].iloc[0]
-        valor = eval(self.d_Distributions[Expression])
-        return valor
+        value = eval(self.d_Distributions[Expression])
+        return value
 
     def GeneratesLoadedHaulageTime(self, Fleet, Origin, Discharge):
         Expression = self.df_LoadHaulage_truck['Expression'][
@@ -294,8 +290,8 @@ class SIMULATION:
         Param_3 = self.df_LoadHaulage_truck['Param_3'][
             (self.df_LoadHaulage_truck['Destination'] == Discharge) & (self.df_LoadHaulage_truck['Fleet'] == Fleet) & (
                     self.df_LoadHaulage_truck['Origin'] == Origin)].iloc[0]
-        valor = eval(self.d_Distributions[Expression])
-        return valor
+        value = eval(self.d_Distributions[Expression])
+        return value
 
     #Write files:
     def write_file(self, arquivo, Fleet, index, Event, Loader, duration):
@@ -309,10 +305,10 @@ class SIMULATION:
     #Start resources
 
     def InitializesReclaimCheck(self):
-        check_retomada = self.Check_retomada()
-        check_retomada.NextEvent = 101
-        check_retomada.EventEnd = self.clock + 10
-        self.EquipmentList.append(check_retomada)
+        Check_OreReclaiming = self.Check_OreReclaiming()
+        Check_OreReclaiming.NextEvent = 101
+        Check_OreReclaiming.EventEnd = self.clock + 10
+        self.EquipmentList.append(Check_OreReclaiming)
 
     def InitializesLoaders(self, m_df_escavadeira):
 
@@ -471,11 +467,11 @@ class SIMULATION:
                 posicao = self.o_d_regions[(Truck.Front, Truck.Material)]['Posicao']
                 self.d_LoadResource[Truck.Loader].InRoute +=1
                 if Truck.Material != 'DEP':
-                    massa = self.s_d_RegionMass[independente][posicao]
+                    mass = self.s_d_RegionMass[independente][posicao]
                     self.ExtracMassRegion[independente] += Truck.Capacity
-                    self.s_d_RegionMass[independente][posicao] = massa - Truck.Capacity
+                    self.s_d_RegionMass[independente][posicao] = mass - Truck.Capacity
                 else:
-                    self.d_deposito[Truck.Front].massa -= Truck.Capacity
+                    self.d_deposito[Truck.Front].mass -= Truck.Capacity
                 if Minimum < 100:
                     self.d_PerformedTrips[
                         (Truck.Discharge, Truck.Front, str(Truck.Material), str(Truck.Fleet), str(Truck.Loader))] += 1
@@ -592,16 +588,16 @@ class SIMULATION:
             Pile = self.d_Piles[Discharge.Pile]
             self.OreMass += Truck.Capacity
             self.d_Plants[Discharge.Plant].YardMass = self.d_Plants[Discharge.Plant].YardMass + Truck.Capacity
-            if int(self.clock // 1440) not in self.s_d_massas.keys():
-                self.s_d_massas[int(self.clock // 1440)] = [Truck.Capacity,0]
+            if int(self.clock // 1440) not in self.s_d_masses.keys():
+                self.s_d_masses[int(self.clock // 1440)] = [Truck.Capacity,0]
             else:
-                self.s_d_massas[int(self.clock // 1440)][0] = Truck.Capacity + self.s_d_massas[int(self.clock // 1440)][0]
+                self.s_d_masses[int(self.clock // 1440)][0] = Truck.Capacity + self.s_d_masses[int(self.clock // 1440)][0]
         elif Discharge.Type == 3:
             self.WasteMass += Truck.Capacity
-            if int(self.clock // 1440) not in self.s_d_massas.keys():
-                self.s_d_massas[int(self.clock // 1440)] = [0,Truck.Capacity]
+            if int(self.clock // 1440) not in self.s_d_masses.keys():
+                self.s_d_masses[int(self.clock // 1440)] = [0,Truck.Capacity]
             else:
-                self.s_d_massas[int(self.clock // 1440)][1] = Truck.Capacity + self.s_d_massas[int(self.clock // 1440)][1]
+                self.s_d_masses[int(self.clock // 1440)][1] = Truck.Capacity + self.s_d_masses[int(self.clock // 1440)][1]
         else:
             self.OreMass += Truck.Capacity
         if (self.OreMass + self.WasteMass) > Truck.Capacity:
@@ -619,29 +615,29 @@ class SIMULATION:
         # UPDATES THE ORE PILES
         if Discharge.Type == 1:
             for i in self.d_WeightGrades.keys():
-                if Pile.massa == 0:
+                if Pile.mass == 0:
                     Pile.inicio = self.clock
                     Pile.quality[i] = Truck.quality[i][0]
                     if self.d_WeightGrades[i] not in self.d_WeightGrades.keys():
                         Pile.quality[self.d_WeightGrades[i]] = Truck.quality[i][1]
                 else:
                     if self.d_WeightGrades[i] == 'Global':
-                        Pile.quality[i] = (Pile.quality[i] * Pile.massa + Truck.quality[i][0] * Truck.Capacity) \
-                                             / (Pile.massa + Truck.Capacity)
+                        Pile.quality[i] = (Pile.quality[i] * Pile.mass + Truck.quality[i][0] * Truck.Capacity) \
+                                             / (Pile.mass + Truck.Capacity)
                     else:
                         Pile.quality[i] = (Pile.quality[i] * Pile.quality[
-                            self.d_WeightGrades[i]] * Pile.massa + Truck.quality[i][0] * Truck.quality[i][
+                            self.d_WeightGrades[i]] * Pile.mass + Truck.quality[i][0] * Truck.quality[i][
                                                   1] * Truck.Capacity) \
-                                             / (Pile.quality[self.d_WeightGrades[i]] * Pile.massa +
+                                             / (Pile.quality[self.d_WeightGrades[i]] * Pile.mass +
                                                 Truck.quality[i][1] * Truck.Capacity)
                         if self.d_WeightGrades[i] not in self.d_WeightGrades.keys():
                             Pile.quality[self.d_WeightGrades[i]] = (Pile.quality[
-                                                                              self.d_WeightGrades[i]] * Pile.massa + \
+                                                                              self.d_WeightGrades[i]] * Pile.mass + \
                                                                           Truck.quality[i][1] * Truck.Capacity) / (
-                                                                                 Pile.massa + Truck.Capacity)
+                                                                                 Pile.mass + Truck.Capacity)
 
-            Pile.massa += Truck.Capacity
-            if Pile.massa >= Pile.Capacity and Discharge.Type == 1:
+            Pile.mass += Truck.Capacity
+            if Pile.mass >= Pile.Capacity and Discharge.Type == 1:
                 self.optimize = 1
                 Plant = self.d_Plants[Discharge.Plant]
                 Pile.Rate = Plant.Rate
@@ -675,14 +671,14 @@ class SIMULATION:
                         Pile.Stacking = 0
                         Pile.Waiting = 0
                         Discharge.d_PileStatus["Reclaiming"] = Pile.index
-                #TERMINOU DE FORMAR A PILHA ATUAL, MAS TEM OUTRA PILHA SENDO RETOMADA
-                elif self.d_Piles[Discharge.d_PileStatus["Reclaiming"]].massa > 0:
+                #IT HAS FINISHED THE FORMATION OF THE CURRENT ORE PILE, BUT THERE IS ANOTHER BEING RECLAIMED.
+                elif self.d_Piles[Discharge.d_PileStatus["Reclaiming"]].mass > 0:
                     Pile.Reclaiming = 0
                     Pile.Stacking = 0
                     Pile.Waiting = 1
                     Discharge.WaitingPiles.append(Pile.index)
-                #TERMINOU DE FORMAR A PILHA ATUAL E N O TEM NENHUMA PILHA SENDO RETOMADA
-                elif self.d_Piles[Discharge.d_PileStatus["Reclaiming"]].massa <= 0:
+                #HAS FINISHED THE FORMATION OF THE CURRENT ORE PILE AND DOES NOT HAVE ANY ORE PILES BEING RECLAIMIED.
+                elif self.d_Piles[Discharge.d_PileStatus["Reclaiming"]].mass <= 0:
                     if len(Discharge.WaitingPiles) > 0:
                         Pile.Reclaiming = 0
                         Pile.Stacking = 0
@@ -705,14 +701,14 @@ class SIMULATION:
                         self.PileFile.write(i + ',')
                     self.PileFile.write('Ratio,Time,Start ,\n')
 
-                self.PileFile.write(str(Pile.index) + "," + str(Pile.Discharge) + "," + str(Pile.massa) + ",")
+                self.PileFile.write(str(Pile.index) + "," + str(Pile.Discharge) + "," + str(Pile.mass) + ",")
                 for i in Pile.quality.keys():
                     self.PileFile.write(str(round(Pile.quality[i], 2)) + ',')
                 self.PileFile.write(str(Pile.Rate) + ',' + "{:.0f}".format(self.clock) + ',')
                 self.PileFile.write("{:.0f}".format(Pile.inicio) + ',')
                 self.PileFile.write('\n')
                 self.PileFile.close()
-                # FIM ENCERRAR PILHA ATUAL
+
 
                 # GERAR NOVA Pile
                 self.PileIndex += 1
@@ -1003,19 +999,19 @@ class SIMULATION:
             self.d_Plants[i].NextEvent = 101
             self.PlantMaintenance(self.d_Plants[i])
 
-    def Reclaim_Pile(self, check_retomada):
+    def Reclaim_Pile(self, Check_OreReclaiming):
         Erase = 0
         for i in self.d_Piles.keys():
             Discharge = self.d_Piles[i].Discharge
             Plant = self.d_DiscResource[Discharge].Plant
             if self.d_Plants[Plant].status == 1:
                 if self.d_Piles[i].Reclaiming == 1:
-                    if self.d_Piles[i].massa > 0:
-                        self.d_Piles[i].massa = self.d_Piles[i].massa - self.d_Piles[i].Rate * (10 / 60)
+                    if self.d_Piles[i].mass > 0:
+                        self.d_Piles[i].mass = self.d_Piles[i].mass - self.d_Piles[i].Rate * (10 / 60)
                         self.d_Plants[Plant].YardMass = self.d_Plants[Plant].YardMass - self.d_Piles[i].Rate * (
                                     10 / 60)
                         #print("Pilha = ", i)
-                        #print("Massa retomada = ", self.d_Piles[i].Rate * (10 / 60), ". Taxa = ", self.d_Piles[i].Rate )
+                        #print("mass retomada = ", self.d_Piles[i].Rate * (10 / 60), ". Taxa = ", self.d_Piles[i].Rate )
 
                         self.FeedMass = self.FeedMass + self.d_Piles[i].Rate * (10 / 60)
                     else:
@@ -1039,17 +1035,17 @@ class SIMULATION:
                             print("Ore pile", i, "starting to be reclaimed")
                             print("Reclaiming -> Discharge  ", Discharge, "-> Pile",
                                   self.d_DiscResource[Discharge].d_PileStatus["Reclaiming"],
-                                  "  = ", self.d_Piles[self.d_DiscResource[Discharge].d_PileStatus["Reclaiming"]].massa,
+                                  "  = ", self.d_Piles[self.d_DiscResource[Discharge].d_PileStatus["Reclaiming"]].mass,
                                   'Time = ', self.clock)
-                        self.d_Piles[i].massa = self.d_Piles[i].massa - self.d_Piles[i].Rate * (10 / 60)
+                        self.d_Piles[i].mass = self.d_Piles[i].mass - self.d_Piles[i].Rate * (10 / 60)
                         self.d_Plants[Plant].YardMass = self.d_Plants[Plant].YardMass - self.d_Piles[i].Rate * (
                                     10 / 60)
                         self.FeedMass = self.FeedMass + self.d_Piles[i].Rate * (10 / 60)
                         self.optimize = 1
-            check_retomada.duration = 10
-            check_retomada.Event = 101
-            check_retomada.EventEnd = self.clock + check_retomada.duration
-            check_retomada.NextEvent = 101
+            Check_OreReclaiming.duration = 10
+            Check_OreReclaiming.Event = 101
+            Check_OreReclaiming.EventEnd = self.clock + Check_OreReclaiming.duration
+            Check_OreReclaiming.NextEvent = 101
 
         if Erase > 0:
             del self.d_Piles[Erase]

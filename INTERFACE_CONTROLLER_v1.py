@@ -6,18 +6,18 @@ import numpy as np  # IT IMPORTS NUMPY LIBRARY
 import matplotlib.pyplot as plt  # IT IMPORTS MATPLOTLIB LIBRARY TO PLOT ALIVE GRAPHICS
 
 
-# SELECT THE FREE MMUS CANDIDATES TO BE EXTRACTED AT THE CURRENT TIME OF THE SIMULATION
+# SELECT THE FREE MMUS CANDIDATES TO BE EXTRACTED AT THE CURRENT TIME OF THE SIMULATION:
 def select_freeMMUS(s_d_regions, s_d_RegionsMasses, s_l_regioes, v_MaterialsName, v_WasteName, v_MassName,
                     MaxMassPerRegion, d_WeightGrades):
     o_l_FreeMMUIndex = [] #LIST OF THE FREE MMU INDEXES
     FreeMMUData = {} #DICIONARY WITH ALL DATA FROM THE FREE MMUS
     NM = {} # NUMBER OF MATERIALS PER MMU
-    c_v_minimum_mass = 100 # MINIMUM MASS CONSIDERED IN A MMU. A MASS BELOW THIS VALUE IS CONSIDERED EXAUSTHED
-    v_WasteMassAvail = 0  # INITIALIZES THE COUNTER OF ORE AVAILABLE IN THE FREE MMUS
-    v_OreMassAvail = 0  # INITIALIZES THE COUNTER OF WASTE AVAILABLE IN THE FREE MMUS
+    c_v_minimum_mass = 100 # MINIMUM MASS CONSIDERED IN A MMU. MASSES BELOW THIS VALUE ARE CONSIDERED EXAUSTHED.
+    v_WasteMassAvail = 0  # INITIALIZES THE COUNTER OF ORE AVAILABLE IN THE FREE MMUS.
+    v_OreMassAvail = 0  # INITIALIZES THE COUNTER OF WASTE AVAILABLE IN THE FREE MMUS.
     for i in s_l_regioes:
         mass_count = 0
-        # FOR EACH REGION, SELECTS THE FREE MMUS BASED ON THE PRECENDENCE ORDER AND THE MAXIMUM MASS CONSIDERED FREE AT EACH MMU
+        # FOR EACH REGION, SELECTS THE FREE MMUS BASED ON THE PRECENDENCE ORDER AND THE MAXIMUM MASS CONSIDERED FREE AT EACH MMU.
         for j in range(len(s_d_RegionsMasses[i])):
             if s_d_RegionsMasses[i][j] > c_v_minimum_mass and mass_count < MaxMassPerRegion:
                 mass_count += s_d_RegionsMasses[i][j]
@@ -75,29 +75,25 @@ def select_freeMMUS(s_d_regions, s_d_RegionsMasses, s_l_regioes, v_MaterialsName
     # CALCULATES THE STRIPPING RATIO OF ALL FREE MMUS
     REM = v_WasteMassAvail / max(v_OreMassAvail, 0.01)
 
-    # RETURN THE DATA OF THE FREES MMUS, THEIR INDEXES, THE NUMBER OF MATERIALS IN EACH MMU, THE STRIPPING RATIO, THE AVAILABLE WASTE AND ORE MATERIAL IN THE FREE MMUS
+    # RETURN THE DATA OF THE FREES MMUS, THEIR INDEXES, THE NUMBER OF MATERIALS IN EACH MMU, THE STRIPPING RATIO, THE AVAILABLE WASTE AND ORE MATERIAL IN THE FREE MMUS.
     return (FreeMMUData, o_l_FreeMMUIndex, NM, REM, v_WasteMassAvail, v_OreMassAvail)
 
 
-# MAIN FUNCTION CALLED CONTROLLER. THIS FUNCTION MANAGES THE INTERFACE BETWEEN THE SIMULATION AND THE OPTIMIZER.
-def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
-                d_UpperBoundGrade, d_UpperBoundSize, d_RegionMass, d_WeightGrades, \
-                df_Truck, df_Discharge, df_LoadingMachine, l_Regions, v_WasteName, v_MaterialsName, v_MassName,
-                v_optimization_time, \
-                v_simulation_time, v_rem, m_df_usina, d_Perfom_plant, df_LoadTime_truck, df_UnloaTime_truck,
-                df_EmpHaulage_truck, df_LoadHaulage_truck, \
-                df_MainBetTime_plant, df_MainDurTime_plant, df_MainBetTime_truck, df_MainDurTime_truck, df_ShiftTurn, \
-                df_Refueling, df_MovTime_loader, d_MinMaxGrades, d_MinMaxSizes, df_MainBetTime_loader,
-                df_MainDurTime_loader, df_LocalComp, \
-                df_Random, df_RandDurTime, Path, v_prioritization, v_tolerance, OutputPath, m_v_num_rep,
-                m_v_start_rep):
+# MAIN FUNCTION CALLED CONTROLLER. THIS FUNCTION MANAGES THE INTERFACE BETWEEN THE SIMULATION AND THE OPTIMIZER, AND ADVANCES THE SIMULATION CLOCK
+def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, d_UpperBoundGrade, d_UpperBoundSize, d_RegionMass, d_WeightGrades, \
+                df_Truck, df_Discharge, df_LoadingMachine, l_Regions, v_WasteName, v_MaterialsName, v_MassName,v_optimization_time, \
+                v_simulation_time, v_rem, m_df_usina, d_Perfom_plant, df_LoadTime_truck, df_UnloaTime_truck, df_EmpHaulage_truck, df_LoadHaulage_truck, \
+                df_MainBetTime_plant, df_MainDurTime_plant, df_MainBetTime_truck, df_MainDurTime_truck, df_ShiftTurn, df_Refueling, df_MovTime_loader, \
+                d_MinMaxGrades, d_MinMaxSizes, df_MainBetTime_loader, df_MainDurTime_loader, df_LocalComp, df_Random, df_RandDurTime, Path, v_prioritization, \
+               v_tolerance, OutputPath, m_v_num_rep, m_v_start_rep):
     c_d_TDE = {}
+
     # ASSIGN TO THE DICTIONARY C_D_TDE THE MOVEMENT TIMES OF THE LOADING MACHINES BETWEEN THE MINE REGIONS. THIS DICIONARY IS AN INPUT OF THE MILP MODEL
     for i in df_MovTime_loader.index:
         aux = eval(i)
         c_d_TDE[aux] = int(df_MovTime_loader['Tempo'].loc[i])
 
-    animation = True  # GENERATES ALIVE GRAPHS DURATION THE EXECUTION OF THE SIMULATION
+    animation = True  # GENERATES ALIVE GRAPHS DURATION THE EXECUTION OF THE SIMULATION IF THE ANIMATION VARIABLE IS TRUE
     if animation:
         plt.ion()
         fig, ((ax00, ax01), (ax10, ax11)) = plt.subplots(2, 2, figsize=(12, 8))
@@ -109,17 +105,17 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
     for i in range(m_v_num_rep):
         l_repl.append(SIMULATION())
 
-    # THIS LOOP IS EXECUTED UNTIL ALL REPLICATIONS HAS BEEN DONE.
+    # THIS LOOP RUN UNTIL ALL REPLICATIONS ARE DONE.
     while len(l_repl) > 0:
         c_cont_repl += 1  # VARIABLE THAT STORES THE NUMBER OF PERFORMED REPLICATIONS
         global o_l_materials
         global o_l_FreeMMUIndex
         global c_d_CycleTime
-        o_l_FreeMMUIndex = []  # LIST THAT STORES THE INDEXES OF MINE REGIONS
-        o_l_materials = l_Materials  # LIST THAT STORES THE MATERIALS OF THE FREE MMUS,
-        s = l_repl[0]  # DECLARES THE ACTUAL SIMULATION OBJECT AS S
-        s.Path = Path  # ASSIGN THE PATH TO BE SAVED THE DATA OF THE SMULATION
-        s.RepNumber = c_cont_repl  #
+        o_l_FreeMMUIndex = []  # LIST THAT STORES THE INDEXES OF THE FREE MMUS.
+        o_l_materials = l_Materials  # LIST THAT STORES THE MATERIALS OF THE FREE MMUS.
+        s = l_repl[0]
+        s.Path = Path  # ASSIGN THE PATH TO BE SAVED THE DATA OF THE SIMULATION
+        s.RepNumber = c_cont_repl
         s.OutputPath = OutputPath
         s.d_WeightGrades = d_WeightGrades
         s.v_TotalScheduledTrips = 0  # INITIALIZES THE SIMULATION VARIABLE THAT STORES THE TOTAL NUMBER OF SCHDEUDLE TRIPS
@@ -176,9 +172,9 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         s.df_UnloaTime_truck = df_UnloaTime_truck  # ASSIGN TO THE SIMULATION DATAFRAME THE UNLOADING TIMES OF THE TRUCKS' CYCLES
         s.df_EmpHaulage_truck = df_EmpHaulage_truck  # ASSIGN TO THE SIMULATION DATAFRAME THE UNLOADING EMPTY HAULAGE OF THE TRUCKS' CYCLES
         s.df_LoadHaulage_truck = df_LoadHaulage_truck  # ASSIGN TO THE SIMULATION DATAFRAME THE LOADED HAULAGE OF THE TRUCKS' CYCLES
-        s.OptimizationTime = v_optimization_time  # ASSIGN TO THE SIMULATION VARIABLE THE DURATION TIME OF OPTIMIZATION
+        s.OptimizationTime = v_optimization_time  # ASSIGN TO THE SIMULATION VARIABLE THE DURATION TIME OF AN WORK SHIFT
 
-        # RECORDED THE AVERAGE CYCLE TIME OF THE TRUCKS
+        # RECORDED THE AVERAGE CYCLE TIME OF THE TRUCKS.
         c_d_CycleTime = {}
         for i in range(len(df_EmpHaulage_truck)):
             c_d_CycleTime[(df_EmpHaulage_truck['Fleet'].iloc[i], df_EmpHaulage_truck['Origin'].iloc[i],
@@ -258,9 +254,9 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
             s.ExtracMassRegion[i] = 0
             c_d_ScheduledMassPerRegion.append(sum(d_RegionMass[i]))
 
-        o_d_razao_regioes = {}
+        o_d_RegionsRatio = {}
         for i in d_RegionMass.keys():
-            o_d_razao_regioes[i] = [sum(d_RegionMass[i]) / c_v_TotalMass, sum(d_RegionMass[i]), 0]
+            o_d_RegionsRatio[i] = [sum(d_RegionMass[i]) / c_v_TotalMass, sum(d_RegionMass[i]), 0]
 
         global tempo_graph
         tempo_graph = []
@@ -272,7 +268,7 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
 
         v_WasteMassAvail = 0
         v_OreMassAvail = 0
-        c_d_prog_mes = {0: 0, 24: 0, 53: 0, 84: 0, 114: 0, 145: 0, 175: 0, 206: 0, 237: 0, 267: 0, 298: 0, 328: 0}
+
         c_l_files = ["\TruckEvents" + str(c_cont_repl) + ".txt", "\LoaderEvents" + str(c_cont_repl) + ".txt",
                      "\OrePiles" + str(c_cont_repl) + ".txt", "\Trips" + str(c_cont_repl) + ".txt"]
         for i in c_l_files:
@@ -288,8 +284,6 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
         s.TrucksEventFile.close()
         s.d_LowerBoundSize = d_LowerBoundSize
 
-        # INITIALIZES THE VARIABLE THAT CONTROLS WHEN A MONTH FINSIHES AND STARTS THE NEXT MONTH:
-        c_passou_mes = False
 
         # LOOP WHOSE INSIDE COMMANDS SELECT THE FREE MMUS, ORDER THE PRIORITIZATION OF THE OBJECTIVES, CALL THE MILP SOLVER WHEN NECESSARY, AND ADVANCE THE SIMULATION CLOCK
         while (s.clock <= v_simulation_time and ((v_WasteMassAvail + v_OreMassAvail) > 0)) or (
@@ -307,8 +301,8 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
 
                 # UPDATES THE RATIO BETEWEEN THE TOTAL EXTRACTED MASS AND THE TOTAL SCHEDULED MASS PER REGION
                 for i in d_RegionMass.keys():
-                    if i in o_d_razao_regioes.keys():
-                        o_d_razao_regioes[i][2] = o_d_razao_regioes[i][1] - sum(s.s_d_RegionMass[i])
+                    if i in o_d_RegionsRatio.keys():
+                        o_d_RegionsRatio[i][2] = o_d_RegionsRatio[i][1] - sum(s.s_d_RegionMass[i])
 
                 # INITIALIZES THE DICTIONARY THAT RECORDS THE MASS AND ORE GRADES AND PARTICLE SIZES OF THE ORE PILES.
                 o_d_PileMasses = {}
@@ -316,7 +310,7 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
 
                 for Pile in s.d_Piles.keys():
                     if s.d_Piles[Pile].Stacking == 1:
-                        o_d_PileMasses[s.d_Piles[Pile].Discharge] = s.d_Piles[Pile].massa
+                        o_d_PileMasses[s.d_Piles[Pile].Discharge] = s.d_Piles[Pile].mass
                         for i in d_WeightGrades.keys():
                             o_d_PileQualities[(s.d_Piles[Pile].Discharge, i)] = s.d_Piles[Pile].quality[i]
                 m_PlantTime = {}
@@ -356,7 +350,6 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                     if s.ExtracMassRegion[i] < sum(d_RegionMass[i]) * 0.95:
                         cont += 1
                 cont = 0
-
                 c_l_ind_regioes = tuple(s.ExtracMassRegion.keys())
                 c_l_ExtracMassRegion = []
                 c_l_ExtracMassRegion = list(s.ExtracMassRegion.values())
@@ -386,8 +379,8 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                                            "Reclaiming  " + str(
                                                s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']),
                                            "Ore yard mass"), \
-                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].massa,
-                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].massa,
+                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].mass,
+                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].mass,
                                            s.d_Plants[s.d_DiscResource['WETPLANT'].Plant].YardMass],
                                           color=["blue", "red", "grey"])
                             else:
@@ -396,9 +389,9 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                                                s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']),
                                            "Waiting " + str(s.d_DiscResource['WETPLANT'].WaitingPiles[0]),
                                            "Ore yard mass"), \
-                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].massa,
-                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].massa,
-                                           s.d_Piles[s.d_DiscResource['WETPLANT'].WaitingPiles[0]].massa,
+                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].mass,
+                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].mass,
+                                           s.d_Piles[s.d_DiscResource['WETPLANT'].WaitingPiles[0]].mass,
                                            s.d_Plants[s.d_DiscResource['WETPLANT'].Plant].YardMass],
                                           color=["blue", "red", "yellow", "grey"])
                     else:
@@ -408,8 +401,8 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                                            "Reclaiming  " + str(
                                                s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']),
                                            "Ore yard mass"), \
-                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].massa,
-                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].massa,
+                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].mass,
+                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].mass,
                                            s.d_Plants[s.d_DiscResource['WETPLANT'].Plant].YardMass],
                                           color=["blue", "red", "grey"])
                             else:
@@ -417,9 +410,9 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                                            "Reclaiming " + str(s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']),
                                            "Waiting " + str(s.d_DiscResource['WETPLANT'].WaitingPiles[0]),
                                            "Ore yard mass"), \
-                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].massa,
-                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].massa,
-                                           s.d_Piles[s.d_DiscResource['WETPLANT'].WaitingPiles[0]].massa,
+                                          [s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Stacking']].mass,
+                                           s.d_Piles[s.d_DiscResource['WETPLANT'].d_PileStatus['Reclaiming']].mass,
+                                           s.d_Piles[s.d_DiscResource['WETPLANT'].WaitingPiles[0]].mass,
                                            s.d_Plants[s.d_DiscResource['WETPLANT'].Plant].YardMass],
                                           color=["blue", "green", "yellow", "grey"])
 
@@ -521,7 +514,7 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                         df_LoadingMachine['Disponibilidade'].loc[i] = s.d_LoadResource[i].disp
                         d_aloc[i] = d_LastAlocation[i]
 
-                    # CALLS THE MILP SOLVER
+                    # CALLS THE MILP-SOLVER
                     s.d_alocation, s.d_trips, d_LastAlocation, status, s.TripsperLoader, otimizar_teor = otimizador.solve(
                         o_l_materials, df_Truck, df_LoadingMachine, \
                         df_Discharge, d_LowerBoundGrade, d_UpperBoundGrade, \
@@ -529,19 +522,19 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
                         s.o_d_regions, o_l_FreeMMUIndex, d_WeightGrades, v_MaterialsName, v_WasteName, v_MassName, \
                         v_optimization_time, v_rem, o_d_PileMasses, o_d_PileQualities, NM, c_d_CycleTime, \
                         m_PlantTime, df_MovTime_loader, d_LastAlocation, d_MinMaxGrades, d_MinMaxSizes, status,
-                        o_d_razao_regioes, c_v_TotalMass, o_l_PrioritizationOrder, \
+                        o_d_RegionsRatio, c_v_TotalMass, o_l_PrioritizationOrder, \
                         df_LocalComp, o_l_weight, v_tolerance)
 
-               # FOR EACH LOADING MACHINE, IF IT IS NOT ITS FIRST ASSIGMENMENT AND IF THE PREVIOUS ASSIGNED REGION IS NOT THE SAME OF THE CURRENT ASSIGNED REGION
+               # FOR EACH LOADING MACHINE, CHECK THE PREVIOUS REGION ASSIGNMENT.
                 for i in s.d_LoadResource.keys():
                     if (d_aloc[i] != 0 and d_LastAlocation != 0 and (d_aloc[i] != d_LastAlocation[i])):
                         s.d_LoadResource[i].t_deslocando = c_d_TDE[(i, d_LastAlocation[i], d_aloc[i])]
                     else:
                         s.d_LoadResource[i].t_deslocando = 0
 
-                s.d_PerformedTrips = {}  # INITIALES THE DICTIONARY THAT CONTROLLS THE NUMBER OF PERFORMED TRIPS PER ROUTE.
-                s.v_TotalPerformedTrips = 0  # INITIALES THE VARIABLE THAT CONTROLLS THE TOTAL NUMBER OF PERFOMED TRIPS
-                s.v_TotalScheduledTrips = 0  # INITIALES THE VARIABLE THAT CONTROLLS THE TOTAL NUMBER OF SCHEDULED TRIPS
+                s.d_PerformedTrips = {}  # IT INITIALIZES THE DICTIONARY THAT CONTROLS THE NUMBER OF PERFORMED TRIPS PER PATH.
+                s.v_TotalPerformedTrips = 0  # IT INITIALIZES THE VARIABLE THAT CONTROLS THE TOTAL NUMBER OF PERFORMED TRIPS.
+                s.v_TotalScheduledTrips = 0  # IT INITIALIZES THE VARIABLE THAT CONTROLS THE TOTAL NUMBER OF SCHEDULED TRIPS.
                 for i in s.d_trips.keys():
                     s.d_PerformedTrips[i] = 0
                     s.v_TotalScheduledTrips += s.d_trips[i]  # UPDATES THE TOTAL SCHEDULE TRIPS VARIABLE
@@ -552,8 +545,8 @@ def CONTROLLER(l_Materials, d_regions, d_LowerBoundGrade, d_LowerBoundSize, \
 
         s.s_md_times.to_csv("Resumo_eventos" + str(c_cont_repl) + ".csv")
         dados = {}
-        dados = {'dia': [i for i in s.s_d_massas.keys()], 'minerio': [s.s_d_massas[i][0] for i in s.s_d_massas.keys()], \
-                 'esteril': [s.s_d_massas[i][1] for i in s.s_d_massas.keys()]}
+        dados = {'dia': [i for i in s.s_d_masses.keys()], 'minerio': [s.s_d_masses[i][0] for i in s.s_d_masses.keys()], \
+                 'esteril': [s.s_d_masses[i][1] for i in s.s_d_masses.keys()]}
         pd.DataFrame.from_dict(dados).to_csv(OutputPath + "\Resumo_massas" + str(c_cont_repl) + ".csv")
         s.s_md_times.to_csv(OutputPath + "\Resumo_eventos" + str(c_cont_repl) + ".csv")
         del dados
